@@ -1,0 +1,38 @@
+# Core scientific stack
+
+numpy
+pandas
+scikit-learn
+
+# Deep Learning
+
+torch
+torchvision
+
+# Image processing
+
+opencv-python
+Pillow
+scikit-image
+
+# Visualization
+
+matplotlib
+seaborn
+
+# Jupyter & experimentation
+
+jupyter
+notebook
+
+# Utilities
+
+tqdm
+
+# Web app (future phases)
+
+streamlit
+
+# Explainability (future)
+
+grad-cam
