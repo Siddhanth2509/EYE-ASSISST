@@ -1,194 +1,140 @@
-🧠 Overview
+# 👁️ AI-Powered Eye Disease Detection & Assistance Platform
 
-EYE-ASSISST is a production-ready system for real-time eye disease classification using deep learning.
-It includes:
+An end-to-end **Deep Learning–based Eye Health Assistant** designed to support **early disease screening, data-driven insights, and doctor-in-the-loop decision support** — without replacing medical professionals.
 
-🌀 Model export to ONNX / TorchScript
+> ⚠️ **Disclaimer**:
+> This project is for **educational and research purposes only**.
+> It is **not a medical diagnosis or prescription system**.
+> Final decisions must always be made by certified ophthalmologists.
 
-⚡ FastAPI-based high-speed inference server
+---
 
-🎥 Webcam + image-batch client for predictions
+## 🚀 Project Vision
 
-🔥 Grad-CAM heatmaps for explainability
+Eye diseases often go undetected until they become severe.
+This project aims to:
 
-🧱 Modular, scalable architecture ready for:
+* Enable **early screening** using deep learning
+* Assist **patients** with awareness & triage
+* Support **doctors** via AI-generated reports (human-in-the-loop)
+* Maintain **ethical, safe, and explainable AI practices**
 
-active learning
+---
 
-online updates
+## 🧠 Core Features (Planned & In Progress)
 
-deployment to clinics / edge devices
+### ✅ Phase 1A — Data Engineering (COMPLETED)
 
-This repository is structured for ML deployment, not just training — making it suitable for real-world integrations and portfolio showcase.
+* EyePACS dataset ingestion (33k+ retinal images)
+* Automated label mapping (NORMAL vs DR)
+* Clean folder architecture
+* Reproducible data pipeline
+* Dataset excluded from GitHub via `.gitignore`
 
-🏗️ Project Structure
+### 🟡 Phase 1B — Image Preprocessing (NEXT)
+
+* Medical-safe resizing
+* Fundus-specific normalization
+* CLAHE contrast enhancement
+* Train / validation / test split
+* Class imbalance handling
+
+### 🔜 Future Phases
+
+* CNN-based deep learning models
+* Explainability (Grad-CAM)
+* NLP-based symptom chatbot
+* Doctor approval workflow
+* Web & mobile app with advanced UI/UX
+
+---
+
+## 🗂️ Project Structure
+
+```text
 eye-realtime-inference/
-│
-├── export_model.py           # Convert trained model → ONNX/TorchScript
-├── inference_server.py       # FastAPI server for real-time predictions
-├── client_demo.py            # Webcam / folder prediction client
-├── utils.py                  # Preprocessing + Grad-CAM utilities
-├── requirements.txt          # Dependencies
-└── README.md                 # Documentation
+├── Data/
+│   ├── raw/            # Raw datasets (ignored in Git)
+│   ├── cleaned/        # Processed datasets (ignored in Git)
+│   └── metadata/
+├── scripts/            # Data processing scripts
+├── models/             # Trained models & checkpoints
+├── notebooks/          # Experiments & analysis
+├── requirements.txt
+├── README.md
+└── .gitignore
+```
 
-🧩 Key Features
-🔹 Real-Time Inference
+> 🔒 **Note**:
+> Medical images and datasets are intentionally excluded from version control.
 
-Optimized for lightning-fast predictions on CPU/GPU using ONNXRuntime.
+---
 
-🔹 Model Export
+## 📊 Dataset Used
 
-Convert your trained eye-disease CNN into formats suitable for deployment:
+* **EyePACS** – Diabetic Retinopathy retinal fundus images
+  Used for large-scale data engineering and preprocessing pipeline validation.
 
-ONNX for edge devices
+Additional datasets (ODIR, Cataract, AMD) will be integrated in later phases using the same pipeline.
 
-TorchScript for PyTorch-serving pipelines
+---
 
-🔹 FastAPI Inference Server
+## 🧪 How to Run (Development)
 
-Production-style inference API supporting:
+### 1️⃣ Clone the repository
 
-single image prediction
+```bash
+git clone https://github.com/<your-username>/<repo-name>.git
+cd <repo-name>
+```
 
-batch prediction
+### 2️⃣ Create virtual environment
 
-optional Grad-CAM output
+```bash
+python -m venv venv
+source venv/bin/activate   # Linux / Mac
+venv\Scripts\activate      # Windows
+```
 
-🔹 Grad-CAM Explainability
+### 3️⃣ Install dependencies
 
-Highlight regions that influence model decisions — a must for medical AI.
-
-🔹 Clean, Modular Architecture
-
-Designed for:
-
-future active learning
-
-incremental training
-
-drift monitoring
-
-hardware optimization (TFLite, TensorRT, etc.)
-
-🧬 Architecture Diagram
-+-----------------------------+
-|   Client (Webcam / UI)      |
-|  - sends image frames       |
-+---------------+-------------+
-                |
-                v
-+-----------------------------+
-|    FastAPI Inference API    |
-|  - loads ONNX/TorchScript   |
-|  - runs inference           |
-|  - optional Grad-CAM        |
-+---------------+-------------+
-                |
-                v
-+-----------------------------+
-|   Model Backend (Runtime)   |
-|   - ONNX Runtime / Torch    |
-|   - Preprocessing pipeline  |
-|   - Postprocessing          |
-+-----------------------------+
-                |
-                v
-+-----------------------------+
-|  Edge Device / Cloud        |
-+-----------------------------+
-
-⚙️ Installation
-
-Clone the repo:
-
-git clone https://github.com/Siddhanth2509/EYE-ASSISST.git
-cd EYE-ASSISST
-
-
-Install dependencies:
-
+```bash
 pip install -r requirements.txt
+```
 
-📦 Model Export
+### 4️⃣ Run data scripts (example)
 
-Export trained model (TensorFlow/Keras → ONNX):
+```bash
+python scripts/split_eyepacs.py
+```
 
-python export_model.py --input-model path/to/model.h5 --output models/xception.onnx
+---
 
+## 🧠 Ethical AI Principles
 
-OR PyTorch → TorchScript:
+* No automated diagnosis or prescriptions
+* Human-in-the-loop decision making
+* Dataset privacy & exclusion from Git
+* Transparent model limitations
+* Explainability-first design
 
-python export_model.py --pytorch-model path/to/model.pt --torchscript models/model.ts
+---
 
-🚀 Run the Inference Server
-uvicorn inference_server:app --host 0.0.0.0 --port 8000
+## 👤 Author
 
+**Siddhanth Sharma**
+B.Tech | Machine Learning & AI
+Focused on **applied AI, healthcare systems, and real-world ML engineering**
 
-API will be available at:
+---
 
-http://localhost:8000/docs
+## 📌 Status
 
-🎥 Run Local Client Demo
-Predict a single image
-python client_demo.py --single path/to/image.jpg
+🟢 Phase 1A — Completed
+🟡 Phase 1B — In Progress
 
-Use webcam for live predictions
-python client_demo.py --webcam
+---
 
-Batch predict a folder
-python client_demo.py --folder ./images/
+## ⭐ If you like this project
 
-🔥 Grad-CAM Visualization
-
-Enable Grad-CAM via API:
-
-POST /predict?explain=true
-
-
-Returns:
-
-class label
-
-confidence
-
-Grad-CAM heatmap (base64 or image file)
-
-🛣️ Roadmap
-
- Integrate active-learning loop
-
- Add model drift detection
-
- TFLite / TensorRT conversion
-
- Deploy on Raspberry Pi / Jetson
-
- Add web dashboard (Streamlit / React)
-
- Add multi-class ensemble model
-
-🧑‍💻 Contributing
-
-Pull requests are welcome!
-For major changes, open an issue to discuss improvements.
-
-📄 License
-
-This project is licensed under the MIT License.
-
-🎉 Final Notes
-
-This repo is designed for real-world ML deployment — not just training notebooks.
-It shows practical engineering skills such as:
-
-API development
-
-model export
-
-real-time inference
-
-explainability
-
-architecture design
-
-Perfect for ML internships, jobs, and production applications.
+Give it a star ⭐ and follow the development!
