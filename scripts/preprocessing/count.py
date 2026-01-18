@@ -1,5 +1,16 @@
+#--------------------------------------------------------------------------------------------------------------------
+# FOR EYE-PACS DATASET
+#--------------------------------------------------------------------------------------------------------------------
+#import os
+#for split in ["train", "val", "test"]:
+#    for cls in ["NORMAL", "DR"]:
+#        p = f"Data/splits/fundus/eyepacs/{split}/{cls}"
+#        print(split, cls, len(os.listdir(p)))
+
+#--------------------------------------------------------------------------------------------------------------------
+# FOR APTOS DATASET
+#--------------------------------------------------------------------------------------------------------------------
 import os
-for split in ["train", "val", "test"]:
-    for cls in ["NORMAL", "DR"]:
-        p = f"Data/splits/fundus/{split}/{cls}"
-        print(split, cls, len(os.listdir(p)))
+for split in ["train","test"]:
+    for c in ["NORMAL","DR"]:
+        print(split, c, len(os.listdir(f"Data/splits/fundus/aptos/{split}/{c}")))
