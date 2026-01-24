@@ -72,7 +72,7 @@ class BinaryEvaluator:
                 targets = targets.float().to(self.device)
                 
                 # Forward pass
-                logits = self.model(images).view(-1)
+                logits = self.model(images).squeeze()
                 probs = torch.sigmoid(logits)
                 preds = (probs > 0.5).long()
                 

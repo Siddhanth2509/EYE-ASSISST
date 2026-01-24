@@ -75,24 +75,12 @@ class BinaryTrainer:
         """Setup loss function after data_module.setup() has been called."""
         if self.criterion is None:
             if self.use_class_weights:
-                # Count samples per class in TRAINING set
-                counts = torch.bincount(
-                    torch.tensor([y for _, y in self.data_module.train_dataset])
-                ).float().to(self.device)
-
-                # pos_weight = N_negative / N_positive
-                pos_weight = counts[0] / counts[1]
-
-                self.criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-                print(
-                    f"Using class-weighted BCE loss. "
-                    f"Counts: {counts.cpu().tolist()}, "
-                    f"pos_weight: {pos_weight.item():.4f}"
-                )
+                weights = self.data_module.get_class_weights().to(self.device)
+                self.criterion = nn.BCEWithLogitsLoss(pos_weight=weights[1] / weights[0])
+                print(f"Using class-weighted BCE loss. Weights: {weights.cpu().tolist()}")
             else:
                 self.criterion = nn.BCEWithLogitsLoss()
                 print("Using standard BCE loss (no class weights)")
-
     
     def train_epoch(self):
         """Train for one epoch."""
@@ -107,7 +95,7 @@ class BinaryTrainer:
             
             # Forward pass
             self.optimizer.zero_grad()
-            logits = self.model(images).view(-1)
+            logits = self.model(images).squeeze()
             loss = self.criterion(logits, targets)
             
             # Backward pass
@@ -133,7 +121,7 @@ class BinaryTrainer:
                 targets = targets.float().to(self.device)
                 
                 # Forward pass
-                logits = self.model(images).view(-1)
+                logits = self.model(images).squeeze()
                 loss = self.criterion(logits, targets)
                 
                 # Predictions
