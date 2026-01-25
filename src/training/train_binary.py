@@ -59,7 +59,7 @@ class BinaryTrainer:
             mode='max',
             factor=0.5,
             patience=3,
-            verbose=True
+            # verbose=True
         )
         
         # Training state
