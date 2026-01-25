@@ -227,3 +227,7 @@ Data/cleaned/
 # Keep folder structure visible
 !Data/raw/.gitkeep
 !Data/cleaned/.gitkeep
+
+models/**/*.pt
+models/**/*.onnx
+models/**/*.pth
