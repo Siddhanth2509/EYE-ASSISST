@@ -304,7 +304,142 @@ to:
 
 📌 **Next Phase:** Phase 2B — CNN Architecture & Training (Implementation Begins)
 
+🩺 EYE-ASSISST — Phase 2
+Binary Diabetic Retinopathy Screening with External Validation
 
+Phase 2 Status: ✅ COMPLETED & FROZEN
+
+📌 Project Overview
+
+EYE-ASSISST is a medical imaging ML project focused on robust and clinically meaningful detection of Diabetic Retinopathy (DR) from retinal fundus images.
+
+Phase 2 concentrates on model design, training, and evaluation discipline, with strong emphasis on:
+
+preventing data leakage
+
+handling class imbalance correctly
+
+prioritizing clinically relevant metrics
+
+validating generalization on an external dataset
+
+🧠 Phase 2B — Implementation
+🧩 Architecture
+
+CNN backbone: ResNet-18
+
+ImageNet pretrained
+
+Stage-1 lock:
+
+Only ResNet-18 used in Phase 2
+
+Multi-backbone support reserved for future phases
+
+🧩 Data Pipeline
+
+Custom FundusDataModule
+
+Frozen directory-based splits
+
+Strong augmentation for training
+
+Strict class-order verification
+
+🧩 Training
+
+Optimizer: AdamW
+
+Learning-rate scheduler
+
+Early stopping based on validation sensitivity
+
+Best model saved by clinical priority, not accuracy
+
+📊 Phase 2 Results — External Validation (APTOS)
+
+This is the most important result of the project.
+
+The model was evaluated on APTOS, a dataset never seen during training or validation.
+
+✅ External Test Performance
+Metric	Value
+Accuracy	~95.9%
+Sensitivity (Recall for DR)	~96.4% ⭐
+Specificity	~95.4%
+AUC-ROC	~0.988
+🧪 Confusion Matrix (APTOS)
+
+True Positives (DR detected correctly): 348
+
+False Negatives (DR missed): 13
+
+False Positives (Normal flagged as DR): 17
+
+True Negatives (Normal correctly identified): 355
+
+🩺 Clinical Interpretation
+
+Very low false negative rate, critical for screening
+
+Balanced performance across classes
+
+Strong generalization to unseen data
+
+This demonstrates the model learned disease-relevant features, not dataset artifacts.
+
+📈 About Training Curves
+
+Training history curves were not prioritized in Phase 2.
+
+Reason:
+
+Focus was on external generalization, not fitting dynamics
+
+Early stopping occurred naturally
+
+Final evaluation metrics provide stronger evidence of model quality
+
+This aligns with research-grade and clinical ML practice.
+
+📁 Repository Structure (Phase 2)
+src/
+├── data/        # DataModule (frozen splits)
+├── models/      # CNN backbone (ResNet-18)
+├── training/    # Training & evaluation logic
+├── metrics/     # Medical metrics
+├── utils/       # Reproducibility helpers
+notebooks/       # EDA & Phase results
+models/          # Checkpoints (Git LFS)
+
+🔒 Phase 2 Closure Statement
+
+Phase 2 is officially complete and frozen.
+
+✔ Model validated externally
+✔ No test-set tuning
+✔ Clinically meaningful metrics achieved
+✔ Clean experiment discipline maintained
+
+🔜 What’s Next (Phase 3 — Not Started)
+
+Planned future extensions (not part of Phase 2):
+
+Multi-disease classification
+
+Advanced backbones (EfficientNet / Xception)
+
+Explainability (Grad-CAM)
+
+Real-time inference / deployment
+
+These will be approached incrementally, without compromising scientific rigor.
+
+🏁 Final Note
+
+This project prioritizes trustworthy ML over inflated metrics.
+
+In medical AI, a model that generalizes honestly is far more valuable than one that looks perfect on paper.
 ---
 
 ## ⭐ If you like this project
