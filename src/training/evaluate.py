@@ -29,8 +29,8 @@ class BinaryEvaluator:
         self.device = device
         
         # Load checkpoint
-        checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
 
+        checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
         if 'model_state_dict' in checkpoint:
             self.model.load_state_dict(checkpoint['model_state_dict'])
         else:

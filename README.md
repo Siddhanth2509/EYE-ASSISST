@@ -304,38 +304,6 @@ to:
 
 📌 **Next Phase:** Phase 2B — CNN Architecture & Training (Implementation Begins)
 
-============================================================
-Evaluation Results - APTOS (External Test)
-============================================================
-Sensitivity (Recall): 0.9640 ⭐ (PRIMARY)
-Specificity: 0.9543
-Accuracy: 0.9591
-Precision: 0.9534
-F1-Score: 0.9587
-AUC-ROC: 0.9881
-
-Confusion Matrix:
-                Predicted
-              NORMAL    DR
-Actual NORMAL     355     17
-        DR         13    348
-
-Detailed Classification Report:
-              precision    recall  f1-score   support
-
-      NORMAL       0.96      0.95      0.96       372
-          DR       0.95      0.96      0.96       361
-
-    accuracy                           0.96       733
-   macro avg       0.96      0.96      0.96       733
-weighted avg       0.96      0.96      0.96       733
-
-
-Clinical Interpretation:
-- True Positives (DR detected correctly): 348
-- False Negatives (DR missed): 13 ⚠️
-- False Positives (Normal flagged as DR): 17
-- True Negatives (Normal correctly identified): 355
 
 ---
 

@@ -228,6 +228,9 @@ Data/cleaned/
 !Data/raw/.gitkeep
 !Data/cleaned/.gitkeep
 
+<<<<<<< HEAD
 models/**/*.pt
 models/**/*.onnx
 models/**/*.pth
+=======
+
