@@ -442,6 +442,23 @@ This project prioritizes trustworthy ML over inflated metrics.
 In medical AI, a model that generalizes honestly is far more valuable than one that looks perfect on paper.
 ---
 
+🚀 Phase 3 — Multi-Disease Medical AI (PLANNING)
+Phase 3 Vision
+
+Move beyond single-disease screening into a multi-disease, multi-head AI system with:
+
+Shared backbone
+
+Multiple disease-specific heads
+
+Multi-label predictions
+
+Per-disease metrics & losses
+
+Generalization-first design
+
+📌 Status: Phase 3 has not started yet (design phase only).
+
 ## ⭐ If you like this project
 
 Give it a star ⭐ and follow the development!
