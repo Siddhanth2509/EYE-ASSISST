@@ -1,14 +1,3 @@
-Got it. I’ll **rewrite + redesign your README** so it feels:
-
-* 🔥 **professional & interview-ready**
-* 🧠 **clinically serious (not hype-y)**
-* 🎯 **interactive, scannable, and GitHub-attractive**
-* 🚀 clearly shows **Phase maturity (especially Phase 2 strength)**
-
-Below is a **fully polished, Phase-2–centered README** you can directly paste into `README.md`.
-
----
-
 # 👁️ **EYE-ASSISST**
 
 ### AI-Powered Eye Disease Detection & Clinical Decision Support Platform
@@ -330,12 +319,3 @@ B.Tech — Machine Learning & AI
 Focused on **applied medical AI**, **ML engineering**, and **real-world systems**
 
 ---
-
-If you want next:
-
-* 🔥 **GitHub badges + visuals**
-* 📊 **Results charts section**
-* 🧪 **Reproducibility checklist**
-* 💼 **Interview-optimized README version**
-
-Just say the word 👌
