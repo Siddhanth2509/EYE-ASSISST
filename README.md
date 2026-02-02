@@ -311,6 +311,78 @@ Phase 3 upgrades the system from a **single-task model** to a **multi-task medic
 
 ---
 
+Input Fundus Image
+│
+▼
+Shared CNN Backbone (ResNet-based)
+│
+┌──────┼────────┐
+│ │ │
+▼ ▼ ▼
+DR Binary DR Severity Multi-Label Diseases
+
+
+Each head:
+- Produces logits only
+- Has its own loss & metrics
+- Supports head-specific Grad-CAM
+
+---
+
+## 🧪 Explainability
+
+- Grad-CAM is generated **per head**
+- Used only in **doctor/admin portals**
+- Not exposed to end users
+- Intended for interpretability, not lesion localization
+
+---
+
+## 🧑‍⚕️ Intended Usage Flow (Future)
+
+- Fundus images captured using **specialized retinal cameras**
+- Uploaded by clinics / diagnostic centers
+- AI generates a **preliminary report**
+- Doctor reviews, edits, and approves
+- Prescriptions are created **only by doctors**
+
+---
+
+## 📁 Repository Structure (Simplified)
+
+src/
+├── configs/ # YAML-based experiment configs
+├── data/ # Datasets & datamodules
+├── models/ # Backbone + multi-head models
+├── losses/ # Custom loss functions
+├── training/ # Phase 2 training (frozen)
+├── training_phase3/ # Phase 3 training pipelines
+├── evaluation_phase3/ # Phase 3 evaluation scripts
+├── explainability/ # Grad-CAM
+├── metrics/ # Metric utilities
+└── utils/ # Logging, seeds, checkpoints
+
+
+---
+
+## 🧪 Current Status
+
+- Phase 1: ✅ Closed
+- Phase 2: ✅ Completed & validated
+- Phase 3 (M1): ✅ Codebase refactor completed
+- Phase 3 (M2): 🔄 DR binary + severity training (next)
+
+---
+
+## 📌 License & Ethics
+
+This project follows:
+- Responsible AI principles
+- No automated diagnosis claims
+- No treatment recommendations by AI
+- Human-in-the-loop enforcement
+
+
 ## 🏁 Final Note
 
 > In medical AI,
