@@ -290,16 +290,24 @@ Phase 2 is **officially complete and frozen**.
 
 ---
 
-## 🔜 Phase 3 — Multi-Disease Medical AI (Planning)
+### 🚀 Phase 3 — Multi-Disease, Multi-Head AI System (IN PROGRESS)
 
-Planned extensions:
+Phase 3 upgrades the system from a **single-task model** to a **multi-task medical AI platform**.
 
-* Multi-label disease detection
-* Shared backbone + disease heads
-* Grad-CAM explainability
-* Real-time inference
+#### Phase 3 Goals
+- Multi-head architecture
+- Binary DR screening
+- DR severity grading
+- Multi-label disease detection
+- Explainability via Grad-CAM
+- Product-ready ML foundation
 
-📌 **Phase 3 has not started yet**
+#### Core Design Principles
+- Shared backbone, multiple task-specific heads
+- Disease independence (multi-label, not multi-class)
+- Sensitivity-first evaluation
+- Doctor-in-the-loop decision making
+- Explainability as support, not diagnosis
 
 ---
 
