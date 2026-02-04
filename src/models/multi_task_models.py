@@ -3,8 +3,7 @@ import torch.nn as nn
 
 from .backbone.resnet import ResNetBackbone
 from .heads.dr_binary import DRBinaryHead
-
-
+from .heads.dr_severity import DRSeverityHead
 
 class MultiTaskModel(nn.Module):
     """
@@ -22,8 +21,12 @@ class MultiTaskModel(nn.Module):
             feature_dim=self.backbone.feature_dim
         )
 
+        # DR severity head (grades 0-4)
+        self.dr_severity_head = DRSeverityHead(
+            feature_dim=self.backbone.feature_dim
+        )
+
         # Placeholders for future heads
-        self.dr_severity_head = None
         self.multilabel_head = None
 
     def forward(self, x: torch.Tensor) -> dict:
