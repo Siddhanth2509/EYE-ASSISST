@@ -12,8 +12,9 @@ class ResNetBackbone(nn.Module):
     def __init__(self, pretrained: bool = True):
         super().__init__()
 
-        # Load ResNet18
-        model = models.resnet18(pretrained=pretrained)
+        # Load ResNet18 with modern weights API
+        weights = models.ResNet18_Weights.IMAGENET1K_V1 if pretrained else None
+        model = models.resnet18(weights=weights)
 
         # Feature dimension before classification head
         self.feature_dim = model.fc.in_features
