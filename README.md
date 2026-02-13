@@ -373,6 +373,15 @@ src/
 - Phase 3 (M2): 🔄 DR binary + severity training (next)
 
 ---
+## 🔮 Future Roadmap
+
+Stage-3 joint optimization
+
+- ODIR multi-label expansion
+- FastAPI inference API
+- Streamlit clinical interface
+- Model compression for edge deployment
+- Grad-CAM report export for doctors
 
 ## 📌 License & Ethics
 
