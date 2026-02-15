@@ -1,3 +1,24 @@
+"""
+Stage-2 Training Script
+------------------------
+Purpose:
+    Train DR Severity Head while freezing:
+        - Backbone
+        - Binary DR head
+
+Strategy:
+    1. Load Stage-1 checkpoint
+    2. Freeze representation layers
+    3. Train severity head only
+    4. Select best model based on QWK
+
+Primary Metric:
+    Quadratic Weighted Kappa (QWK)
+
+Author: Siddhanth Sharma
+Phase: 3 (Stage-2)
+"""
+
 import os
 import torch
 import torch.nn as nn
