@@ -10,10 +10,10 @@ class MultiTaskModel(nn.Module):
     Multi-task model with a shared backbone and task-specific heads.
     """
 
-    def __init__(self, backbone_pretrained: bool = True):
+    def __init__(self, backbone: str = "resnet50", backbone_pretrained: bool = True):
         super().__init__()
 
-        # Shared backbone
+        # Shared backbone (currently only resnet50 supported)
         self.backbone = ResNetBackbone(pretrained=backbone_pretrained)
 
         # Heads (start with DR binary only)

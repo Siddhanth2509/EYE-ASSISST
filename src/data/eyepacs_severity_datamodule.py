@@ -15,8 +15,8 @@ class EyePACSSeverityDataModule:
 
     def __init__(
         self,
-        data_root: str,
-        labels_csv: str,
+        data_root: str = "Data/splits/fundus",
+        labels_csv: str = "Data/labels/eyepacs_trainLabels.csv",
         image_size: int = 224,
         batch_size: int = 32,
         num_workers: int = 4,
