@@ -68,7 +68,7 @@ def train_one_epoch(model, loader, optimizer, criterion, device):
     model.train()
     running_loss = 0.0
 
-    for batch in tqdm(loader, desc="Training"):
+    for batch in tqdm(loader, desc="Training", leave=False, dynamic_ncols=True):
         images, dr_labels, severity_labels = batch
 
         images = images.to(device)
@@ -99,7 +99,7 @@ def validate(model, loader, criterion, device):
     all_labels = []
 
     with torch.no_grad():
-        for batch in tqdm(loader, desc="Validation"):
+        for batch in tqdm(loader, desc="Validation", leave=False, dynamic_ncols=True):
             images, dr_labels, severity_labels = batch
 
             images = images.to(device)
@@ -148,7 +148,7 @@ def main():
 
     # 3️⃣ Model
     model = MultiTaskModel(backbone="resnet50")
-    checkpoint = torch.load(STAGE1_CHECKPOINT, map_location=device)
+    checkpoint = torch.load(STAGE1_CHECKPOINT, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
 
