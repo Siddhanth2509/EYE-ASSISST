@@ -70,7 +70,7 @@ class EyePACSSeverityDataset(Dataset):
         img_path, severity = self.samples[idx]
 
         try:
-            image = Image.open(img_path).convert("RGB")
+            image = Image.open(str(img_path)).convert("RGB")
         except Exception as e:
             raise RuntimeError(f"Failed to load image {img_path}: {str(e)}")
 

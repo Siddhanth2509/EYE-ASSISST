@@ -1,5 +1,6 @@
 # src/data/eyepacs_severity_datamodule.py
 
+import os
 from pathlib import Path
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -19,7 +20,7 @@ class EyePACSSeverityDataModule:
         labels_csv: str = "Data/labels/eyepacs_trainLabels.csv",
         image_size: int = 224,
         batch_size: int = 32,
-        num_workers: int = 4,
+        num_workers: int = 0 if os.name == "nt" else 4,
         pin_memory: bool = True,
     ):
         self.data_root = Path(data_root)

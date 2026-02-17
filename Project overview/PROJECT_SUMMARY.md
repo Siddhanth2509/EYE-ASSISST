@@ -183,7 +183,7 @@ End-to-end medical imaging system for **early eye disease detection** using mult
 
 ---
 
-#### **`src/training phase 3(multi-model)/` - Multi-Task Training**
+#### **`src/training_phase3_multimodel/` - Multi-Task Training**
 
 | File | Purpose | Strategy |
 |------|---------|----------|

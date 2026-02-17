@@ -219,7 +219,7 @@ src/
 ├── metrics/                       [MODULE] ⭐ Evaluation metrics
 ├── utils/                         [MODULE] ⭐ Utilities (logging, checkpoints, etc.)
 ├── explainability/                [MODULE] ⭐ Grad-CAM & interpretability
-├── training phase 3(multi-model)/ [MODULE] ⭐ Phase-3 multi-model training
+├── training_phase3_multimodel/    [MODULE] ⭐ Phase-3 multi-model training
 └── evaluation phase 3(multi-model)/ [MODULE] ⭐ Phase-3 evaluation
 ```
 
@@ -448,10 +448,10 @@ Original Image → Model → Grad-CAM Heatmap (red = high attention)
 
 ---
 
-#### **📂 `src/training phase 3(multi-model)/` - Phase-3 Multi-Model Training**
+#### **📂 `src/training_phase3_multimodel/` - Phase-3 Multi-Model Training**
 
 ```
-src/training phase 3(multi-model)/
+src/training_phase3_multimodel/
 ├── train_stage1.py                [TRAINER] Stage-1: Train DR binary head only
 ├── train_stage2.py                [TRAINER] Stage-2: Train DR severity head (freeze binary)
 ├── train_stage3.py                [TRAINER] Stage-3: Joint training (all heads)
@@ -528,7 +528,7 @@ src/evaluation phase 3(multi-model)/
    └─ DataModule: src/data/eyepacs_severity_datamodule.py
 
 2. Training
-   └─ Run: src/training phase 3(multi-model)/train_stage2.py
+   └─ Run: src/training_phase3_multimodel/train_stage2.py
    └─ Model: Multi-task model (binary head + severity head)
    └─ Strategy: Freeze binary head, train severity head only
 
