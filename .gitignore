@@ -234,3 +234,5 @@ Data/cleaned/
 #models/**/*.pth
 =======
 
+Data/
+*.zip
