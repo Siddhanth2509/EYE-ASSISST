@@ -44,7 +44,7 @@ def main():
 
     # Model
     model = MultiTaskModel(backbone="resnet50", backbone_pretrained=False)
-    checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
+    checkpoint = torch.load(CHECKPOINT_PATH, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
     model.eval()
@@ -80,8 +80,15 @@ def main():
     print("\nConfusion Matrix:")
     print(cm)
 
+    CLASS_NAMES = ["No DR", "Mild", "Moderate", "Severe", "Proliferative"]
+
+    print("\nPer-Class Accuracy:")
+    per_class_acc = cm.diagonal() / cm.sum(axis=1)
+    for name, acc_val in zip(CLASS_NAMES, per_class_acc):
+        print(f"  {name:15s}: {acc_val:.4f}")
+
     print("\nClassification Report:")
-    print(classification_report(all_labels, all_preds))
+    print(classification_report(all_labels, all_preds, target_names=CLASS_NAMES))
 
 
 if __name__ == "__main__":
