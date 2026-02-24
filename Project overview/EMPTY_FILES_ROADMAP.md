@@ -1,468 +1,208 @@
 # ⚠️ Empty Files & Implementation Roadmap
 
-> **Complete list of empty/placeholder files and their implementation priority**
+> **Complete list of empty/placeholder files and their implementation priority**  
+> **Last Audited:** February 24, 2026
 
 ---
 
 ## 📋 Summary
 
-**Total Empty Files Found: 12**
+**Total Empty Files Found: 28**
 
 | Category | Count | Priority |
 |----------|-------|----------|
-| Config Files | 7 | 🔴 High |
+| Config Files (YAML) | 7 | 🔴 High |
 | Dataset Classes | 5 | 🟡 Medium |
+| Evaluation Scripts | 3 | 🔴 High |
+| Loss Functions | 1 | 🔴 High |
+| Training Scripts | 2 | 🟡 Medium |
+| Explainability | 1 | 🟡 Medium |
+| Data Utilities | 1 | 🟢 Low |
+| Package `__init__.py` files | 6 | 🟢 Low |
+| Model Files | 2 | 🟡 Medium |
+
+---
+
+## 🔴 CRITICAL PRIORITY: Core Pipeline Gaps (4 files)
+
+These files are referenced by active code or documentation but contain nothing.
+
+---
+
+### 1. `src/losses/masked_bce.py` ❌ EMPTY
+**Purpose:** Masked Binary Cross-Entropy loss for multi-label training with missing annotations  
+**Impact:** Blocks Stage-3 multi-label training entirely  
+**Should implement:**
+```python
+class MaskedBCELoss(nn.Module):
+    """
+    BCE loss that ignores missing labels using a mask tensor.
+    Essential for ODIR dataset where not all diseases are annotated.
+    """
+    def forward(self, logits, targets, masks):
+        loss = F.binary_cross_entropy_with_logits(logits, targets, reduction='none')
+        loss = (loss * masks).sum() / masks.sum()
+        return loss
+```
+
+---
+
+### 2. `src/explainability/gradcam.py` ❌ EMPTY
+**Purpose:** Grad-CAM visualization for model interpretability  
+**Impact:** Required for research papers (explainability section) and clinical trust  
+**Should implement:**
+```python
+class GradCAM:
+    """
+    Generate class-discriminative heatmaps showing which
+    image regions the model focuses on for its predictions.
+    """
+    def __init__(self, model, target_layer): ...
+    def generate(self, input_image, target_class): ...
+```
+
+---
+
+### 3. `src/evaluation_phase3_multi-model/dr_binary_meterics.py` ❌ EMPTY
+**Purpose:** Binary DR evaluation (AUC, Sensitivity, Specificity)  
+**Impact:** Stage-1 model has no standalone evaluation script in the Phase-3 pipeline  
+
+---
+
+### 4. `src/evaluation_phase3_multi-model/multilabel_metrics.py` ❌ EMPTY
+**Purpose:** Multi-label disease evaluation (per-disease AUC, Hamming loss)  
+**Impact:** Blocks Stage-3 evaluation  
 
 ---
 
 ## 🔴 HIGH PRIORITY: Configuration Files (7 files)
 
-### **Root Level Configs (3 files)**
+All config YAML files are 0 bytes. Training currently uses hardcoded hyperparameters.
 
-#### 1. `configs/model.yaml` ❌ EMPTY
-**Purpose:** Model architecture hyperparameters  
-**Should contain:**
-```yaml
-# Model Architecture
-backbone: "resnet50"
-pretrained: true
-freeze_backbone: false
+### Root Level Configs (3 files)
 
-# Head configurations
-binary_head:
-  hidden_dim: 512
-  dropout: 0.5
+| # | File | Purpose |
+|---|------|---------|
+| 5 | `configs/model.yaml` | Model architecture (backbone, heads, dropout) |
+| 6 | `configs/paths.yaml` | Data directories, checkpoint paths |
+| 7 | `configs/train.yaml` | LR, batch size, epochs, augmentation, loss weights |
 
-severity_head:
-  hidden_dim: 512
-  dropout: 0.5
-  num_classes: 5
+### Stage-Specific Configs (4 files)
 
-multilabel_head:
-  hidden_dim: 512
-  dropout: 0.3
-  num_classes: 8
-  diseases: ["AMD", "Cataract", "Glaucoma", "DR", "Hypertension", "Myopia", "Others", "Normal"]
-```
+| # | File | Purpose |
+|---|------|---------|
+| 8 | `src/configs/base.yml` | Base config inherited by all stages (seed, device, logging) |
+| 9 | `src/configs/stage1_dr.yaml` | Stage-1 binary DR training settings |
+| 10 | `src/configs/stage2_mutlilabel.yml` | Stage-2 severity + multi-label settings |
+| 11 | `src/configs/stage3_joint.yaml` | Stage-3 joint fine-tuning settings |
 
-**Usage:**
-```python
-import yaml
-config = yaml.safe_load(open('configs/model.yaml'))
-model = MultiTaskModel(backbone=config['backbone'])
-```
-
----
-
-#### 2. `configs/paths.yaml` ❌ EMPTY
-**Purpose:** Data paths configuration  
-**Should contain:**
-```yaml
-# Data directories
-data_root: "Data"
-raw_data: "Data/raw"
-processed_data: "Data/processed"
-splits: "Data/splits/fundus"
-
-# Dataset paths
-eyepacs:
-  train: "Data/splits/fundus/eyepacs/train"
-  val: "Data/splits/fundus/eyepacs/val"
-  labels: "Data/labels/eyepacs_trainLabels.csv"
-
-aptos:
-  test: "Data/splits/fundus/aptos/test"
-  labels: "Data/labels/aptos_test.csv"
-
-# Model checkpoints
-checkpoint_dir: "models"
-logs_dir: "logs"
-```
-
-**Usage:**
-```python
-import yaml
-paths = yaml.safe_load(open('configs/paths.yaml'))
-data_root = paths['splits']
-```
-
----
-
-#### 3. `configs/train.yaml` ❌ EMPTY
-**Purpose:** Training hyperparameters  
-**Should contain:**
-```yaml
-# Training settings
-epochs: 50
-batch_size: 32
-num_workers: 4
-pin_memory: true
-
-# Optimizer
-optimizer: "Adam"
-learning_rate: 0.0001
-weight_decay: 0.0001
-
-# Scheduler
-scheduler: "ReduceLROnPlateau"
-patience: 5
-factor: 0.5
-min_lr: 0.000001
-
-# Early stopping
-early_stopping: true
-early_stopping_patience: 10
-
-# Image settings
-image_size: 224
-
-# Loss weights (multi-task)
-loss_weights:
-  binary: 1.0
-  severity: 0.5
-  multilabel: 0.3
-
-# Augmentation
-augmentation:
-  random_rotation: 15
-  random_flip: 0.5
-  color_jitter:
-    brightness: 0.2
-    contrast: 0.2
-```
-
-**Usage:**
-```python
-import yaml
-train_cfg = yaml.safe_load(open('configs/train.yaml'))
-lr = train_cfg['learning_rate']
-```
-
----
-
-### **Stage-Specific Configs (4 files)**
-
-#### 4. `src/configs/base.yml` ❌ EMPTY
-**Purpose:** Base configuration inherited by all stages  
-**Should contain:**
-```yaml
-# Base configuration for all training stages
-seed: 42
-
-# Device
-device: "cuda"
-mixed_precision: true
-
-# Logging
-log_interval: 10
-save_interval: 5
-
-# Checkpointing
-save_best: true
-save_latest: true
-
-# Metrics
-primary_metric: "auc"
-maximize_metric: true
-```
-
----
-
-#### 5. `src/configs/stage1_dr.yaml` ❌ EMPTY
-**Purpose:** Stage-1 binary DR training config  
-**Should contain:**
-```yaml
-# Inherits from base.yml
-base_config: "src/configs/base.yml"
-
-# Stage-1 specific
-stage: 1
-task: "binary_dr"
-
-# Model
-freeze_layers: []
-active_heads: ["binary"]
-
-# Training
-epochs: 30
-learning_rate: 0.0001
-
-# Data
-datasets:
-  train: "Data/splits/fundus/eyepacs/train"
-  val: "Data/splits/fundus/eyepacs/val"
-
-# Loss
-loss_function: "BCEWithLogitsLoss"
-class_weights: true
-```
-
----
-
-#### 6. `src/configs/stage2_mutlilabel.yml` ❌ EMPTY
-**Purpose:** Stage-2 severity + multi-label training config  
-**Should contain:**
-```yaml
-# Inherits from base.yml
-base_config: "src/configs/base.yml"
-
-# Stage-2 specific
-stage: 2
-task: "severity_multilabel"
-
-# Model
-freeze_layers: ["backbone", "binary_head"]
-active_heads: ["severity", "multilabel"]
-
-# Training
-epochs: 25
-learning_rate: 0.00005
-
-# Load pretrained
-load_checkpoint: "models/stage1_dr_binary/best.pt"
-freeze_pretrained: true
-
-# Data
-datasets:
-  train: "Data/splits/fundus/eyepacs/train"
-  val: "Data/splits/fundus/eyepacs/val"
-  labels: "Data/labels/eyepacs_trainLabels.csv"
-
-# Loss
-severity_loss: "OrdinalRegressionLoss"
-multilabel_loss: "MaskedBCELoss"
-```
-
----
-
-#### 7. `src/configs/stage3_joint.yaml` ❌ EMPTY
-**Purpose:** Stage-3 joint fine-tuning config  
-**Should contain:**
-```yaml
-# Inherits from base.yml
-base_config: "src/configs/base.yml"
-
-# Stage-3 specific
-stage: 3
-task: "joint_multitask"
-
-# Model
-freeze_layers: []  # Fine-tune all
-active_heads: ["binary", "severity", "multilabel"]
-
-# Training
-epochs: 20
-learning_rate: 0.00001  # Lower LR for fine-tuning
-
-# Load pretrained
-load_checkpoint: "models/stage2_multilabel/best.pt"
-
-# Early stopping (prevent overfitting)
-early_stopping: true
-patience: 8
-
-# Loss weights
-loss_weights:
-  binary: 1.0
-  severity: 0.5
-  multilabel: 0.3
-```
+**Why this matters:** Without configs, experiments aren't reproducible. Every training run has parameters scattered across Python scripts.
 
 ---
 
 ## 🟡 MEDIUM PRIORITY: Dataset Classes (5 files)
 
-### **Dataset Implementation Roadmap**
+Only `src/data/datasets/eyepacs_severity.py` is implemented. All others are 0 bytes.
+
+| # | File | Purpose | Needed For |
+|---|------|---------|------------|
+| 12 | `src/data/datasets/eyepacs.py` | Binary EyePACS (DR/Normal) | Custom preprocessing beyond ImageFolder |
+| 13 | `src/data/datasets/aptos.py` | APTOS 2019 (severity 0-4) | External test set evaluation |
+| 14 | `src/data/datasets/odir.py` | ODIR-5K (8-disease multi-label) | Stage-3 multi-label head |
+| 15 | `src/data/datasets/amd.py` | AMD detection | Multi-disease extension |
+| 16 | `src/data/datasets/cataract.py` | Cataract detection (external eye) | Multi-disease extension |
+
+**Priority order:** `odir.py` > `aptos.py` > `eyepacs.py` > `amd.py` = `cataract.py`
 
 ---
 
-#### 8. `src/data/datasets/eyepacs.py` ❌ EMPTY
-**Purpose:** Binary EyePACS dataset (DR/Normal)  
-**Priority:** 🟡 Medium (currently using ImageFolder)  
-**Should implement:**
-```python
-class EyePACSDataset(Dataset):
-    """
-    Binary DR classification dataset.
-    
-    Returns:
-        image: Tensor (3, H, W)
-        label: 0 (Normal) or 1 (DR)
-    """
-    def __init__(self, images_dir, transform=None):
-        pass
-    
-    def __getitem__(self, idx):
-        pass
-```
+## 🟡 MEDIUM PRIORITY: Training & Evaluation Scripts (5 files)
 
-**Why implement:**
-- Custom preprocessing specific to EyePACS
-- Better control over label mapping
-- Add metadata (patient ID, image quality scores)
+| # | File | Purpose | Status |
+|---|------|---------|--------|
+| 17 | `src/evaluation_phase3_multi-model/severity_metrics.py` | Standalone severity metrics (QWK, CM) | Empty — `evaluate_stage2_finetuned.py` exists as workaround |
+| 18 | `src/training_phase3_multimodel/train_stage3.py` | Stage-3 joint multi-task training | Empty — blocks Stage-3 |
+| 19 | `src/training_phase3_multimodel/trainer.py` | Unified multi-task trainer class | Empty — blocks Stage-3 |
+| 20 | `src/models/heads/multi_label.py` | Multi-label classification head (8 diseases) | Empty — blocks Stage-3 |
+| 21 | `src/models/__init__.py` | Models package init | Empty (functional but no exports) |
 
 ---
 
-#### 9. `src/data/datasets/aptos.py` ❌ EMPTY
-**Purpose:** APTOS 2019 dataset (DR severity 0-4)  
-**Priority:** 🟡 Medium (used for test set)  
-**Should implement:**
-```python
-class APTOSDataset(Dataset):
-    """
-    APTOS 2019 Blindness Detection dataset.
-    
-    Returns:
-        image: Tensor (3, H, W)
-        dr_label: 0 (Normal) or 1 (DR)
-        severity_label: 0-4 (DR grade)
-    """
-    def __init__(self, images_dir, labels_csv, transform=None):
-        pass
-    
-    def __getitem__(self, idx):
-        pass
-```
+## 🟢 LOW PRIORITY: Utility & Package Files (7 files)
 
-**Why implement:**
-- Different preprocessing than EyePACS (different image sources)
-- Add test-time augmentation (TTA) support
-- Handle APTOS-specific quality issues
+These are either intentionally minimal or have low impact.
 
----
+| # | File | Purpose | Notes |
+|---|------|---------|-------|
+| 22 | `src/data/transforms.py` | Custom augmentations | Transforms are inline in DataModules currently |
+| 23 | `src/utils/logging.py` | Training log utilities | Using print statements currently |
+| 24 | `src/__init__.py` | Root package init | Intentionally empty (standard Python) |
+| 25 | `src/data/__init__.py` | Data package init | Intentionally empty |
+| 26 | `src/metrics/__init__.py` | Metrics package init | Intentionally empty |
+| 27 | `src/training/__init__.py` | Training package init | Intentionally empty |
+| 28 | `src/utils/__init__.py` | Utils package init | Intentionally empty |
 
-#### 10. `src/data/datasets/amd.py` ❌ EMPTY
-**Purpose:** Age-related Macular Degeneration dataset  
-**Priority:** 🟢 Low (future multi-disease extension)  
-**Should implement:**
-```python
-class AMDDataset(Dataset):
-    """
-    AMD detection dataset.
-    
-    Returns:
-        image: Tensor (3, H, W)
-        amd_label: 0 (Normal) or 1 (AMD)
-        severity: 0 (None), 1 (Early), 2 (Intermediate), 3 (Advanced)
-    """
-```
-
-**Why implement later:**
-- Expand beyond DR to other retinal diseases
-- Multi-label classification (can have DR + AMD)
-- Requires separate AMD annotations
-
----
-
-#### 11. `src/data/datasets/cataract.py` ❌ EMPTY
-**Purpose:** Cataract detection dataset (external eye images)  
-**Priority:** 🟢 Low (future external eye disease extension)  
-**Should implement:**
-```python
-class CataractDataset(Dataset):
-    """
-    Cataract detection from external eye images.
-    
-    Note: Different preprocessing than fundus images.
-    
-    Returns:
-        image: Tensor (3, H, W)
-        cataract_label: 0 (Normal) or 1 (Cataract)
-        severity: 0-3 (Cataract grade)
-    """
-```
-
-**Why implement later:**
-- Different image modality (external vs fundus)
-- Different preprocessing pipeline
-- Requires separate model branch or new model
-
----
-
-#### 12. `src/data/datasets/odir.py` ❌ EMPTY
-**Purpose:** ODIR-5K multi-label dataset (8 diseases)  
-**Priority:** 🟡 Medium (important for multi-label head)  
-**Should implement:**
-```python
-class ODIRDataset(Dataset):
-    """
-    ODIR-5K multi-label dataset.
-    
-    8 diseases: Normal, DR, Glaucoma, Cataract, AMD, 
-                Hypertension, Myopia, Others
-    
-    Returns:
-        image: Tensor (3, H, W)
-        labels: Tensor (8,) - multi-hot encoding
-        masks: Tensor (8,) - 1 if annotated, 0 if missing
-    """
-    def __init__(self, images_dir, labels_csv, transform=None):
-        pass
-    
-    def __getitem__(self, idx):
-        # Handle missing labels with masks
-        pass
-```
-
-**Why implement:**
-- Critical for multi-label training
-- Teaches model to recognize multiple diseases simultaneously
-- Uses masked BCE loss (some annotations missing)
+**Note:** `__init__.py` files (items 24–28) are standard Python package markers and are typically empty. They are listed for completeness but do not need content unless you want to expose specific imports.
 
 ---
 
 ## 📊 Implementation Priority Matrix
 
-| File | Priority | Effort | Impact | Deadline |
-|------|----------|--------|--------|----------|
-| `configs/train.yaml` | 🔴 High | Low | High | Week 1 |
-| `configs/paths.yaml` | 🔴 High | Low | High | Week 1 |
-| `configs/model.yaml` | 🔴 High | Low | Medium | Week 1 |
-| `src/configs/base.yml` | 🔴 High | Low | High | Week 1 |
-| `src/configs/stage1_dr.yaml` | 🔴 High | Low | High | Week 2 |
-| `src/configs/stage2_mutlilabel.yml` | 🔴 High | Medium | High | Week 2 |
-| `src/configs/stage3_joint.yaml` | 🔴 High | Medium | High | Week 3 |
-| `src/data/datasets/odir.py` | 🟡 Medium | High | High | Week 4 |
-| `src/data/datasets/aptos.py` | 🟡 Medium | Medium | Medium | Week 4 |
-| `src/data/datasets/eyepacs.py` | 🟡 Medium | Medium | Low | Week 5 |
-| `src/data/datasets/amd.py` | 🟢 Low | High | Low | Future |
-| `src/data/datasets/cataract.py` | 🟢 Low | High | Low | Future |
+| File | Priority | Effort | Impact | Blocks |
+|------|----------|--------|--------|--------|
+| `src/losses/masked_bce.py` | 🔴 Critical | Low | High | Stage-3 training |
+| `src/explainability/gradcam.py` | 🔴 Critical | Medium | High | Paper explainability |
+| `src/evaluation_phase3_multi-model/dr_binary_meterics.py` | 🔴 Critical | Low | Medium | Stage-1 eval in Phase-3 |
+| `src/evaluation_phase3_multi-model/multilabel_metrics.py` | 🔴 Critical | Medium | High | Stage-3 eval |
+| `configs/model.yaml` | 🔴 High | Low | Medium | Reproducibility |
+| `configs/paths.yaml` | 🔴 High | Low | Medium | Reproducibility |
+| `configs/train.yaml` | 🔴 High | Low | High | Reproducibility |
+| `src/configs/base.yml` | 🔴 High | Low | Medium | Config inheritance |
+| `src/configs/stage1_dr.yaml` | 🔴 High | Low | Medium | Experiment tracking |
+| `src/configs/stage2_mutlilabel.yml` | 🔴 High | Low | Medium | Experiment tracking |
+| `src/configs/stage3_joint.yaml` | 🔴 High | Low | Medium | Experiment tracking |
+| `src/models/heads/multi_label.py` | 🟡 Medium | Medium | High | Stage-3 model |
+| `src/training_phase3_multimodel/train_stage3.py` | 🟡 Medium | High | High | Stage-3 training |
+| `src/training_phase3_multimodel/trainer.py` | 🟡 Medium | High | High | Stage-3 training |
+| `src/data/datasets/odir.py` | 🟡 Medium | High | High | Multi-label data |
+| `src/data/datasets/aptos.py` | 🟡 Medium | Medium | Medium | External test eval |
+| `src/data/datasets/eyepacs.py` | 🟡 Medium | Medium | Low | Custom preprocessing |
+| `src/evaluation_phase3_multi-model/severity_metrics.py` | 🟡 Medium | Low | Low | Has workaround |
+| `src/data/transforms.py` | 🟢 Low | Low | Low | Has inline alternative |
+| `src/utils/logging.py` | 🟢 Low | Medium | Low | Print works for now |
+| `src/data/datasets/amd.py` | 🟢 Low | High | Low | Future extension |
+| `src/data/datasets/cataract.py` | 🟢 Low | High | Low | Future extension |
+| `__init__.py` files (6) | 🟢 Low | None | None | Intentionally empty |
 
 ---
 
-## 🚀 Quick Implementation Steps
+## 🚀 Recommended Implementation Order
 
-### **Week 1: Core Configs**
-```bash
-# Create all YAML configs with basic hyperparameters
-1. Copy templates from this document
-2. Adjust paths to match your system
-3. Test loading configs in Python
-```
+### **Phase A — Unblock Stage-3 (Week 1–2)**
+1. `src/losses/masked_bce.py` — implement MaskedBCELoss
+2. `src/models/heads/multi_label.py` — implement MultiLabelHead
+3. `src/data/datasets/odir.py` — implement ODIRDataset
+4. `src/training_phase3_multimodel/trainer.py` — unified trainer
+5. `src/training_phase3_multimodel/train_stage3.py` — joint training script
 
-### **Week 2-3: Stage Configs**
-```bash
-# Implement stage-specific configs
-1. Start with stage1_dr.yaml (simplest)
-2. Add stage2/stage3 configs
-3. Test staged training pipeline
-```
+### **Phase B — Configs & Reproducibility (Week 2–3)**
+6. All 7 YAML config files — populate with current hyperparameters
+7. Wire config loading into training scripts
 
-### **Week 4: Dataset Classes**
-```bash
-# Implement critical datasets
-1. ODIR (multi-label head needs this)
-2. APTOS (external validation)
-3. Test dataloaders work correctly
-```
+### **Phase C — Evaluation & Explainability (Week 3–4)**
+8. `src/evaluation_phase3_multi-model/dr_binary_meterics.py`
+9. `src/evaluation_phase3_multi-model/multilabel_metrics.py`
+10. `src/explainability/gradcam.py`
 
-### **Week 5+: Optional Datasets**
-```bash
-# Implement remaining datasets as needed
-1. EyePACS custom class (if ImageFolder insufficient)
-2. AMD (multi-disease expansion)
-3. Cataract (external eye images)
-```
+### **Phase D — Remaining Datasets (Week 4+)**
+11. `src/data/datasets/aptos.py`
+12. `src/data/datasets/eyepacs.py`
+13. `src/data/datasets/amd.py` (future)
+14. `src/data/datasets/cataract.py` (future)
+
+### **Phase E — Polish (Optional)**
+15. `src/data/transforms.py` — centralize augmentations
+16. `src/utils/logging.py` — structured logging
 
 ---
 
@@ -471,80 +211,31 @@ class ODIRDataset(Dataset):
 ### **Config Files**
 - [ ] All YAML files parse without errors
 - [ ] Paths exist on disk
-- [ ] Hyperparameters are reasonable (LR not too high/low)
-- [ ] Loss weights sum to reasonable value
+- [ ] Hyperparameters match values used in successful training runs
 - [ ] Config inheritance works (base.yml → stage configs)
 
 ### **Dataset Classes**
 - [ ] `__len__` returns correct count
 - [ ] `__getitem__` returns tensors with correct shapes
-- [ ] Labels match expected format (int for classification, float for regression)
+- [ ] Labels match expected format
 - [ ] Transforms applied correctly
 - [ ] No data leakage (train/val/test separation)
-- [ ] Handle missing files gracefully (skip with warning)
+
+### **Loss Functions**
+- [ ] MaskedBCELoss handles missing labels correctly
+- [ ] Gradient flows properly through masked positions
+
+### **Evaluation Scripts**
+- [ ] Metrics match sklearn reference implementations
+- [ ] Reports are saved to disk (JSON/CSV)
+
+### **Explainability**
+- [ ] Grad-CAM heatmaps align with clinical features (optic disc, hemorrhages)
+- [ ] Works with multi-task model (can target any head)
 
 ---
 
-## 🔧 Testing Commands
-
-### **Test Config Loading**
-```python
-import yaml
-
-# Test individual configs
-config = yaml.safe_load(open('configs/train.yaml'))
-print(config)
-
-# Test config merging (base + stage)
-base = yaml.safe_load(open('src/configs/base.yml'))
-stage1 = yaml.safe_load(open('src/configs/stage1_dr.yaml'))
-# Merge logic here
-```
-
-### **Test Dataset Classes**
-```python
-from src.data.datasets.odir import ODIRDataset
-from torch.utils.data import DataLoader
-
-# Test dataset
-dataset = ODIRDataset(
-    images_dir='Data/raw/ODIR Dataset',
-    labels_csv='Data/labels/odir_labels.csv'
-)
-
-print(f"Dataset size: {len(dataset)}")
-image, labels, masks = dataset[0]
-print(f"Image shape: {image.shape}")
-print(f"Labels: {labels}")
-print(f"Masks: {masks}")
-
-# Test dataloader
-loader = DataLoader(dataset, batch_size=4, shuffle=True)
-batch = next(iter(loader))
-print(f"Batch shapes: {batch[0].shape}, {batch[1].shape}, {batch[2].shape}")
-```
-
----
-
-## 📝 Notes
-
-### **Why Empty Files Exist**
-- **Placeholder Pattern:** Common in ML projects to define structure early
-- **Iterative Development:** Implement core functionality first, add datasets later
-- **Modularity:** Each dataset/config is independent, can be implemented in parallel
-
-### **Migration Strategy**
-Currently using:
-- `torchvision.datasets.ImageFolder` for binary classification
-- Hardcoded hyperparameters in training scripts
-
-After implementation:
-- Custom Dataset classes with better control
-- YAML configs for easy experimentation
-- Cleaner, more maintainable code
-
----
-
-**Last Updated:** February 8, 2026  
-**Status:** 12 files identified, 7 high priority, 5 medium/low  
-**Next Steps:** Implement configs (Week 1), then critical datasets (Week 4)
+**Last Updated:** February 24, 2026  
+**Status:** 28 empty files identified (22 actionable, 6 intentionally empty `__init__.py`)  
+**Critical Blockers:** 4 files block Stage-3 and paper-readiness  
+**Next Steps:** Phase A (unblock Stage-3) → Phase B (configs) → Phase C (eval + explainability)
