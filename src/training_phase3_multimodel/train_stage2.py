@@ -143,8 +143,13 @@ def main():
     )
     datamodule.setup()
 
-    train_loader = datamodule.train_dataloader()
+    # Balanced sampling: oversample minority classes
+    train_loader = datamodule.train_dataloader(balanced=True)
     val_loader = datamodule.val_dataloader()
+
+    # Print class distribution for logging
+    dist = datamodule.get_severity_distribution()
+    print(f"Training class distribution: {dist}")
 
     # 3️⃣ Model
     model = MultiTaskModel(backbone="resnet50")
@@ -158,8 +163,10 @@ def main():
     freeze_backbone_and_binary(model)
     print("Backbone and Binary head frozen.")
 
-    # 5️⃣ Loss
-    criterion = SeverityLoss()
+    # 5️⃣ Loss (class-weighted CE to combat imbalance)
+    class_weights = datamodule.get_class_weights().to(device)
+    print(f"Class weights: {class_weights.tolist()}")
+    criterion = SeverityLoss(class_weights=class_weights)
 
     # 6️⃣ Optimizer (ONLY severity head params)
     optimizer = torch.optim.Adam(
