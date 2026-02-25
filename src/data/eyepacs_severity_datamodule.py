@@ -1,8 +1,10 @@
 # src/data/eyepacs_severity_datamodule.py
 
 import os
+import torch
 from pathlib import Path
-from torch.utils.data import DataLoader
+from collections import Counter
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import transforms
 
 from src.data.datasets.eyepacs_severity import EyePACSSeverityDataset
@@ -75,6 +77,10 @@ class EyePACSSeverityDataModule:
             transform=self.transform_eval,
         )
 
+    def _get_train_labels(self):
+        """Extract severity labels from training dataset samples list (fast, no I/O)."""
+        return [severity for _, severity in self.train_dataset.samples]
+
     def get_severity_distribution(self):
         """
         Get severity level distribution in the training set.
@@ -86,56 +92,88 @@ class EyePACSSeverityDataModule:
             raise RuntimeError(
                 "train_dataset not initialized. Call setup() before get_severity_distribution()."
             )
-        
-        from collections import Counter
-        severity_labels = [self.train_dataset[i][2].item() for i in range(len(self.train_dataset))]
-        return dict(Counter(severity_labels))
+        return dict(Counter(self._get_train_labels()))
 
     def get_class_weights(self, num_classes: int = 5):
         """
-        Calculate class weights for imbalanced severity levels.
+        Calculate inverse-frequency class weights for imbalanced severity levels.
         
         Args:
             num_classes: Number of severity classes (default: 5 for 0-4)
         
         Returns:
-            torch.Tensor: Weight for each severity class
+            torch.Tensor: Weight for each severity class (shape: [num_classes])
         
         Note: setup() must be called before this method.
         """
-        from collections import Counter
-        import torch
-        
         if not hasattr(self, 'train_dataset') or self.train_dataset is None:
             raise RuntimeError(
                 "train_dataset not initialized. Call setup() before get_class_weights()."
             )
         
-        # Get severity labels from training set
-        severity_labels = [self.train_dataset[i][2].item() for i in range(len(self.train_dataset))]
-        class_counts = Counter(severity_labels)
+        labels = self._get_train_labels()
+        class_counts = Counter(labels)
+        total = len(labels)
         
-        total = len(severity_labels)
-        
-        # Calculate weights: inverse frequency
+        # Inverse frequency: rare classes get higher weight
         weights = torch.zeros(num_classes)
-        for idx, count in class_counts.items():
-            weights[idx] = total / (num_classes * count)
+        for cls_idx, count in class_counts.items():
+            weights[cls_idx] = total / (num_classes * count)
         
         return weights
 
-    def train_dataloader(self):
+    def _build_weighted_sampler(self):
+        """
+        Build a WeightedRandomSampler that oversamples minority classes.
+        
+        Each sample gets weight = 1 / count(its_class), so all classes
+        are equally likely to appear in a batch.
+        """
+        labels = self._get_train_labels()
+        class_counts = Counter(labels)
+        
+        # Per-sample weight = inverse of its class frequency
+        sample_weights = torch.tensor(
+            [1.0 / class_counts[label] for label in labels],
+            dtype=torch.float64,
+        )
+        
+        return WeightedRandomSampler(
+            weights=sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
+        )
+
+    def train_dataloader(self, balanced: bool = True):
+        """
+        Get training DataLoader.
+        
+        Args:
+            balanced: If True, use WeightedRandomSampler for class-balanced
+                      batches. If False, use plain shuffle (original behavior).
+        """
         if not hasattr(self, 'train_dataset') or self.train_dataset is None:
             raise RuntimeError(
                 "train_dataset not initialized. Call setup() before train_dataloader()."
             )
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
-        )
+        
+        if balanced:
+            sampler = self._build_weighted_sampler()
+            return DataLoader(
+                self.train_dataset,
+                batch_size=self.batch_size,
+                sampler=sampler,           # sampler handles ordering — no shuffle
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+            )
+        else:
+            return DataLoader(
+                self.train_dataset,
+                batch_size=self.batch_size,
+                shuffle=True,
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+            )
 
     def val_dataloader(self):
         if not hasattr(self, 'val_dataset') or self.val_dataset is None:
