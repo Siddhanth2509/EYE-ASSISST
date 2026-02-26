@@ -2,19 +2,33 @@ import torch
 import torch.nn as nn
 
 from .backbone.resnet import ResNetBackbone
+from .backbone.efficientnet import EfficientNetBackbone
 from .heads.dr_binary import DRBinaryHead
 from .heads.dr_severity import DRSeverityHead
 
 class MultiTaskModel(nn.Module):
     """
     Multi-task model with a shared backbone and task-specific heads.
+
+    Supported backbones:
+        - "resnet18" / "resnet50": ResNet18 backbone (512-dim features)
+        - "efficientnet_b0":       EfficientNet-B0 (1280-dim features)
+        - "efficientnet_b3":       EfficientNet-B3 (1536-dim features)
     """
+
+    EFFICIENTNET_VARIANTS = {"efficientnet_b0", "efficientnet_b3"}
 
     def __init__(self, backbone: str = "resnet50", backbone_pretrained: bool = True):
         super().__init__()
 
-        # Shared backbone (currently only resnet50 supported)
-        self.backbone = ResNetBackbone(pretrained=backbone_pretrained)
+        # Shared backbone
+        if backbone in self.EFFICIENTNET_VARIANTS:
+            self.backbone = EfficientNetBackbone(
+                variant=backbone, pretrained=backbone_pretrained
+            )
+        else:
+            # Default: ResNet18
+            self.backbone = ResNetBackbone(pretrained=backbone_pretrained)
 
         # Heads (start with DR binary only)
         self.dr_binary_head = DRBinaryHead(
