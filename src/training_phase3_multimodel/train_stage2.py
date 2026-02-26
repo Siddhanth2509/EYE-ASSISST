@@ -38,18 +38,23 @@ from src.utils.seed import set_seed
 # =========================
 STAGE1_CHECKPOINT = "models/stage1_dr_binary/best.pt"
 SAVE_DIR = "models/stage2_dr_severity"
-NUM_EPOCHS = 25
-LR = 5e-5
+NUM_EPOCHS = 10           # Continuation: 10 more epochs from E3 best
+LR_HEAD = 5e-5           # Severity head learning rate
+LR_BACKBONE = 5e-6       # Backbone layer4 learning rate (10x lower)
 WEIGHT_DECAY = 1e-4
 BATCH_SIZE = 32
 IMAGE_SIZE = 224
 SEED = 42
+
+# Resume from E3 best checkpoint (QWK=0.6407 at epoch 12)
+RESUME_CHECKPOINT = "models/stage2_dr_severity/best.pt"
 
 
 # =========================
 # Freeze Utility
 # =========================
 def freeze_backbone_and_binary(model):
+    """Freeze entire backbone and binary head."""
     for param in model.backbone.parameters():
         param.requires_grad = False
 
@@ -59,6 +64,31 @@ def freeze_backbone_and_binary(model):
     model.backbone.eval()
     model.dr_binary_head.eval()
     model.dr_severity_head.train()
+
+
+def unfreeze_backbone_layer4(model):
+    """
+    Unfreeze only the last ResNet block (layer4) for fine-tuning.
+    
+    ResNet18 architecture:
+        - layer1, layer2, layer3: frozen (general features)
+        - layer4: unfrozen (task-specific fine-grained features)
+    
+    This enables the backbone to adapt its high-level representations
+    for severity grading while preserving low/mid-level features.
+    """
+    for param in model.backbone.model.layer4.parameters():
+        param.requires_grad = True
+    
+    # Count trainable params for logging
+    layer4_params = sum(p.numel() for p in model.backbone.model.layer4.parameters() if p.requires_grad)
+    head_params = sum(p.numel() for p in model.dr_severity_head.parameters() if p.requires_grad)
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    print(f"Layer4 trainable params: {layer4_params:,}")
+    print(f"Severity head params:    {head_params:,}")
+    print(f"Total trainable:         {trainable:,} / {total_params:,} ({100*trainable/total_params:.1f}%)")
 
 
 # =========================
@@ -144,45 +174,46 @@ def main():
     datamodule.setup()
 
     # Balanced sampling: oversample minority classes
-    train_loader = datamodule.train_dataloader(balanced=True)
+    train_loader = datamodule.train_dataloader(balanced=False)
     val_loader = datamodule.val_dataloader()
 
     # Print class distribution for logging
     dist = datamodule.get_severity_distribution()
     print(f"Training class distribution: {dist}")
 
-    # 3️⃣ Model
+    # 3️⃣ Model — resume from E3 best checkpoint
     model = MultiTaskModel(backbone="resnet50")
-    checkpoint = torch.load(STAGE1_CHECKPOINT, map_location=device, weights_only=False)
+    checkpoint = torch.load(RESUME_CHECKPOINT, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
 
-    print("Stage-1 weights loaded successfully.")
+    resume_epoch = checkpoint.get("epoch", 0)
+    print(f"Resumed from E3 best checkpoint (epoch {resume_epoch + 1}, QWK=0.6407).")
 
-    # 4️⃣ Freeze
+    # 4️⃣ Freeze all, then selectively unfreeze layer4
     freeze_backbone_and_binary(model)
     print("Backbone and Binary head frozen.")
+    
+    unfreeze_backbone_layer4(model)
+    print("Backbone layer4 unfrozen for fine-tuning.")
 
-    # 5️⃣ Loss (class-weighted CE to combat imbalance)
-    class_weights = datamodule.get_class_weights().to(device)
-    print(f"Class weights: {class_weights.tolist()}")
-    criterion = SeverityLoss(class_weights=class_weights)
+    # 5️⃣ Loss (plain CE — sampler handles class balance)
+    criterion = SeverityLoss()
 
-    # 6️⃣ Optimizer (ONLY severity head params)
-    optimizer = torch.optim.Adam(
-        model.dr_severity_head.parameters(),
-        lr=LR,
-        weight_decay=WEIGHT_DECAY
-    )
+    # 6️⃣ Optimizer (discriminative LR: head fast, backbone slow)
+    optimizer = torch.optim.Adam([
+        {"params": model.dr_severity_head.parameters(), "lr": LR_HEAD},
+        {"params": model.backbone.model.layer4.parameters(), "lr": LR_BACKBONE},
+    ], weight_decay=WEIGHT_DECAY)
 
     os.makedirs(SAVE_DIR, exist_ok=True)
 
-    best_qwk = -1.0
+    best_qwk = 0.6407  # E3 best — only save if we beat this
 
     # 7️⃣ Training Loop
     for epoch in range(NUM_EPOCHS):
 
-        print(f"\nEpoch [{epoch+1}/{NUM_EPOCHS}]")
+        print(f"\nEpoch [{epoch+1}/{NUM_EPOCHS}] (global {resume_epoch + 1 + epoch + 1})")
 
         train_loss = train_one_epoch(
             model, train_loader, optimizer, criterion, device
