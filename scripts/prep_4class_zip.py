@@ -41,6 +41,13 @@ def main():
     print(f"  Original distribution:\n{df['level'].value_counts().sort_index().to_string()}\n")
 
     df["level_4class"] = df["level"].map(REMAP)
+
+    # Safety check: ensure no labels were silently dropped during remapping
+    assert df["level_4class"].isna().sum() == 0, (
+        f"Remapping failed! {df['level_4class'].isna().sum()} labels have no mapping. "
+        f"Unmapped values: {df.loc[df['level_4class'].isna(), 'level'].unique().tolist()}"
+    )
+
     print(f"  Remapped distribution:")
     for cls, name in CLASS_NAMES.items():
         count = (df["level_4class"] == cls).sum()
