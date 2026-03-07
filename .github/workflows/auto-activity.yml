@@ -112,13 +112,13 @@ jobs:
           printf "\n---\n**[%s]** — Daily research sync\n" "$DATE" >> "$FILE"
 
           if [ -n "$PAPER" ]; then
-            printf "- 📄 Latest ArXiv: *%s*\n" "$PAPER" >> "$FILE"
+            printf -- "- 📄 Latest ArXiv: *%s*\n" "$PAPER" >> "$FILE"
           else
             # Fallback if ArXiv is offline — just log the timestamp
-            printf "- 🔬 Research sync (ArXiv unreachable — timestamp logged)\n" >> "$FILE"
+            printf -- "- 🔬 Research sync (ArXiv unreachable — timestamp logged)\n" >> "$FILE"
           fi
 
-          printf "- ⚗️ Phase-3 M2 active: EfficientNet-B3 @384px / ResNet18 fine-tune experiments\n" >> "$FILE"
+          printf -- "- ⚗️ Phase-3 M2 active: EfficientNet-B3 @384px / ResNet18 fine-tune experiments\n" >> "$FILE"
 
       # ── Step 5b: Mine-Portfolio — timestamp only, no code touched ────
       - name: 🟢 Update Mine-Portfolio activity (timestamp only)
@@ -133,7 +133,7 @@ jobs:
             printf "# 🟢 Portfolio Activity\n\nTimestamp log — tracks last active date for contribution graph.\n\n" > "$FILE"
           fi
 
-          printf "- **%s** — Portfolio maintenance sync\n" "$DATE" >> "$FILE"
+          printf -- "- **%s** — Portfolio maintenance sync\n" "$DATE" >> "$FILE"
 
       # ── Step 5c: DermAssist-AI — activity_log.md (repo is empty) ────
       - name: 📋 Update DermAssist-AI activity log
