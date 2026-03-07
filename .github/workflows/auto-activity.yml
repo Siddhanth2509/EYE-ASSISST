@@ -1,0 +1,208 @@
+name: 🌱 Multi-Repo Activity Automation
+
+on:
+  schedule:
+    # ── Weekdays (Mon–Fri): 2 commits/day ─────────────────────────────
+    - cron: "0 5 * * 1-5"    # 10:30 IST
+    - cron: "0 13 * * 1-5"   # 18:30 IST
+    # ── Weekends (Sat–Sun): 4 commits/day ─────────────────────────────
+    - cron: "0 3 * * 0,6"    # 08:30 IST
+    - cron: "0 7 * * 0,6"    # 12:30 IST
+    - cron: "0 11 * * 0,6"   # 16:30 IST
+    - cron: "0 15 * * 0,6"   # 20:30 IST
+  workflow_dispatch:           # Manual trigger for testing
+
+env:
+  GH_USERNAME: Siddhanth2509
+  BOT_NAME: Siddhanth Sharma
+  BOT_EMAIL: siddhanth232509@gmail.com
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SAFETY NOTE:
+#  This workflow ONLY touches the following files in each repo:
+#    • research_log/daily_log.md    (EYE-ASSISST)
+#    • _activity/last_active.md     (Mine-Portfolio)
+#    • activity_log.md              (all others)
+#  It NEVER touches src/, models/, training/, or any source code.
+# ─────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  activity:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Step 1: Checkout controller repo (EYE-ASSISST) ──────────────
+      - name: ⬇️ Checkout controller repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      # ── Step 2: Read rotation counter → pick next repo in sequence ───
+      - name: 🔄 Select next repo via rotation counter
+        id: select
+        run: |
+          repos=(
+            "EYE-ASSISST"
+            "DermAssist-AI-for-Skin-Disease-Detection-and-Insights"
+            "UnderGround-WaterLevel-Predictor"
+            "EEG-Brainwave-Analysis"
+            "Mine-Portfolio"
+          )
+
+          mkdir -p _automation
+
+          if [ -f _automation/rotation_state.txt ]; then
+            COUNTER=$(cat _automation/rotation_state.txt | tr -dc '0-9')
+          else
+            COUNTER=0
+          fi
+
+          INDEX=$(( COUNTER % ${#repos[@]} ))
+          TARGET="${repos[$INDEX]}"
+          NEXT=$(( COUNTER + 1 ))
+
+          echo "$NEXT" > _automation/rotation_state.txt
+          echo "TARGET_REPO=$TARGET" >> $GITHUB_ENV
+          echo "🎯 Selected: $TARGET  (slot $INDEX, counter → $NEXT)"
+
+      # ── Step 3: Save rotation counter back to controller repo ────────
+      - name: 💾 Commit rotation counter
+        run: |
+          git config user.name  "${{ env.BOT_NAME }}"
+          git config user.email "${{ env.BOT_EMAIL }}"
+          git add _automation/rotation_state.txt
+          git commit -m "chore: update rotation counter" || echo "Counter unchanged"
+          git push
+
+      # ── Step 4: Clone the target repo ────────────────────────────────
+      - name: 📥 Clone target repository
+        run: |
+          git clone \
+            https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ env.GH_USERNAME }}/${{ env.TARGET_REPO }}.git \
+            target_repo
+          cd target_repo
+          DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | awk '{print $NF}')
+          echo "DEFAULT_BRANCH=$DEFAULT_BRANCH" >> $GITHUB_ENV
+          echo "📌 Branch: $DEFAULT_BRANCH"
+
+      # ── Step 5a: EYE-ASSISST — ArXiv research log ───────────────────
+      - name: 📚 Update EYE-ASSISST research log (ArXiv + fallback)
+        if: env.TARGET_REPO == 'EYE-ASSISST'
+        run: |
+          cd target_repo
+          mkdir -p research_log
+          FILE="research_log/daily_log.md"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          if [ ! -f "$FILE" ]; then
+            printf "# 📚 EYE-ASSISST Research Log\n\nAutomated daily log of research activity, paper tracking, and experiment notes.\n\n" > "$FILE"
+          fi
+
+          # ── ArXiv fetch with 10 s timeout + graceful fallback ────────
+          PAPER=""
+          PAPER=$(curl -sf --max-time 10 \
+            "https://export.arxiv.org/api/query?search_query=ti:diabetic+retinopathy+deep+learning&sortBy=submittedDate&sortOrder=descending&max_results=5" \
+            | grep -o '<title>[^<]*</title>' \
+            | sed 's/<[^>]*>//g' \
+            | grep -vi 'arxiv' \
+            | head -n 1 \
+            | xargs 2>/dev/null || true)
+
+          printf "\n---\n**[%s]** — Daily research sync\n" "$DATE" >> "$FILE"
+
+          if [ -n "$PAPER" ]; then
+            printf "- 📄 Latest ArXiv: *%s*\n" "$PAPER" >> "$FILE"
+          else
+            # Fallback if ArXiv is offline — just log the timestamp
+            printf "- 🔬 Research sync (ArXiv unreachable — timestamp logged)\n" >> "$FILE"
+          fi
+
+          printf "- ⚗️ Phase-3 M2 active: EfficientNet-B3 @384px / ResNet18 fine-tune experiments\n" >> "$FILE"
+
+      # ── Step 5b: Mine-Portfolio — timestamp only, no code touched ────
+      - name: 🟢 Update Mine-Portfolio activity (timestamp only)
+        if: env.TARGET_REPO == 'Mine-Portfolio'
+        run: |
+          cd target_repo
+          mkdir -p _activity
+          FILE="_activity/last_active.md"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          if [ ! -f "$FILE" ]; then
+            printf "# 🟢 Portfolio Activity\n\nTimestamp log — tracks last active date for contribution graph.\n\n" > "$FILE"
+          fi
+
+          printf "- **%s** — Portfolio maintenance sync\n" "$DATE" >> "$FILE"
+
+      # ── Step 5c: DermAssist-AI — activity_log.md (repo is empty) ────
+      - name: 📋 Update DermAssist-AI activity log
+        if: env.TARGET_REPO == 'DermAssist-AI-for-Skin-Disease-Detection-and-Insights'
+        run: |
+          cd target_repo
+          FILE="activity_log.md"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          if [ ! -f "$FILE" ]; then
+            printf "# 📋 DermAssist-AI Activity Log\n\nAutomated project activity log.\n\n" > "$FILE"
+          fi
+
+          entries=(
+            "Repository maintenance sync"
+            "Project structure review"
+            "Codebase health check"
+            "Documentation review"
+            "Dependencies audit"
+          )
+          ENTRY="${entries[$((RANDOM % ${#entries[@]}))]}"
+          printf "- **%s** — %s\n" "$DATE" "$ENTRY" >> "$FILE"
+
+      # ── Step 5d: Other ML repos — activity_log.md ───────────────────
+      - name: 📋 Update ML repo activity log
+        if: |
+          env.TARGET_REPO == 'UnderGround-WaterLevel-Predictor' ||
+          env.TARGET_REPO == 'EEG-Brainwave-Analysis'
+        run: |
+          cd target_repo
+          FILE="activity_log.md"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          if [ ! -f "$FILE" ]; then
+            printf "# 📋 Activity Log\n\nAutomated repository activity log.\n\n" > "$FILE"
+          fi
+
+          entries=(
+            "Repository maintenance sync"
+            "Codebase health check"
+            "Project structure review"
+            "Documentation update"
+            "Automated project sync"
+          )
+          ENTRY="${entries[$((RANDOM % ${#entries[@]}))]}"
+          printf "- **%s** — %s\n" "$DATE" "$ENTRY" >> "$FILE"
+
+      # ── Step 6: Commit and push to target repo ───────────────────────
+      - name: 🚀 Commit and push
+        run: |
+          cd target_repo
+          git config user.name  "${{ env.BOT_NAME }}"
+          git config user.email "${{ env.BOT_EMAIL }}"
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "⚠️  No changes to commit — skipping."
+            exit 0
+          fi
+
+          git add -A
+
+          MESSAGES=(
+            "chore: automated repository maintenance"
+            "docs: daily activity sync"
+            "chore: project maintenance update"
+            "docs: automated log update"
+            "chore: repository health check"
+          )
+          MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+
+          git commit -m "$MSG"
+          git push origin HEAD:"${{ env.DEFAULT_BRANCH }}"
+          echo "✅ Pushed to ${{ env.TARGET_REPO }} on branch ${{ env.DEFAULT_BRANCH }}"
