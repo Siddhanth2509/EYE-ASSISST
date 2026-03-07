@@ -188,9 +188,11 @@ End-to-end medical imaging system for **early eye disease detection** using mult
 | File | Purpose | Strategy |
 |------|---------|----------|
 | `train_stage1.py` | Train binary head | Stage-1: Binary DR only |
-| `train_stage2.py` | Train severity head | Stage-2: Freeze binary, train severity |
-| `train_stage3.py` | Joint training | Stage-3: Fine-tune all heads |
-| `trainer.py` | Unified trainer class | Multi-task training loop |
+| `train_stage2.py` | Train severity head (ResNet18 baseline) | Stage-2: Freeze binary, train severity |
+| `train_stage2_finetune.py` | ResNet18 Stage-2 fine-tuning (E3+) | Stage-2 extended fine-tune run |
+| `train_stage2_efficientnet.py` | EfficientNet-B3 @384px Stage-2 | High-res DR severity experiment |
+| `train_stage3.py` | Joint training (reserved) | Stage-3: Future multi-task fine-tune |
+| `trainer.py` | Unified trainer class (reserved) | Multi-task training loop |
 
 **Training Flow:**
 ```
@@ -349,9 +351,15 @@ python scripts/spliteyepacs.py
 | Phase | Status | Completion |
 |-------|--------|------------|
 | Phase-1 (Binary DR) | ✅ Complete | 100% |
-| Phase-2 (Severity) | 🔄 In Progress | 80% |
-| Phase-3 (Multi-task) | 🔄 In Progress | 60% |
+| Phase-3 (M1): Codebase Refactor | ✅ Complete | 100% |
+| Phase-3 (M2): DR Binary + Severity | 🔄 In Progress | ~65% |
+| Phase-3 (M3): Multi-label + Joint | ⏳ Planned | 0% |
 | Deployment | ⏳ Planned | 0% |
+
+**Phase-3 (M2) Current Experiments:**
+- 🔬 ResNet18 Stage-2 fine-tuning (E3+ runs)
+- 🔬 EfficientNet-B3 @384px high-resolution DR severity (E4 / E4b)
+- 🔬 Loss comparison: Cross-Entropy vs Earth Mover Distance (EMD)
 
 ---
 
@@ -363,5 +371,5 @@ python scripts/spliteyepacs.py
 
 ---
 
-**Last Updated:** February 8, 2026  
+**Last Updated:** March 7, 2026  
 **Maintained by:** EYE-ASSISST Development Team
