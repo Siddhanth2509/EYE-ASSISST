@@ -243,6 +243,11 @@ Total Loss = λ₁·BCE(Binary) + λ₂·CE(Severity) + λ₃·BCE(MultiLabel)
 │  Metric: Quadratic Weighted Kappa (QWK)
 │  Duration: 25 epochs
 │
+│  Stage-2 Training Variants (as of Mar 2026):
+│    • ResNet18 baseline          ← original
+│    • ResNet18 fine-tune (E3+)   ← extended run with lower LR
+│    • EfficientNet-B3 @384px     ← high-resolution DR severity experiment
+│
 └───────────────────────┬───────────────────────────────────────────────────────
                         │
                         ▼
@@ -476,5 +481,6 @@ Metric Priority:
 ---
 
 **Created:** February 8, 2026  
+**Last Updated:** March 7, 2026  
 **Purpose:** Visual reference for system architecture  
 **Maintained by:** EYE-ASSISST Development Team
