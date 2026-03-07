@@ -29,6 +29,7 @@ env:
 jobs:
   activity:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       # ── Step 1: Checkout controller repo (EYE-ASSISST) ──────────────
@@ -71,7 +72,7 @@ jobs:
           git config user.name  "${{ env.BOT_NAME }}"
           git config user.email "${{ env.BOT_EMAIL }}"
           git add _automation/rotation_state.txt
-          git commit -m "chore: update rotation counter" || echo "Counter unchanged"
+          git commit -m "chore: update rotation counter [skip ci]" || echo "Counter unchanged"
           git push
 
       # ── Step 4: Clone the target repo ────────────────────────────────
