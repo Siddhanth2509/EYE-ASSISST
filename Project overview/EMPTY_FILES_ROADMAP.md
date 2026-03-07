@@ -1,7 +1,7 @@
 # ⚠️ Empty Files & Implementation Roadmap
 
 > **Complete list of empty/placeholder files and their implementation priority**  
-> **Last Audited:** February 24, 2026
+> **Last Audited:** March 7, 2026
 
 ---
 
@@ -121,10 +121,13 @@ Only `src/data/datasets/eyepacs_severity.py` is implemented. All others are 0 by
 | # | File | Purpose | Status |
 |---|------|---------|--------|
 | 17 | `src/evaluation_phase3_multi-model/severity_metrics.py` | Standalone severity metrics (QWK, CM) | Empty — `evaluate_stage2_finetuned.py` exists as workaround |
-| 18 | `src/training_phase3_multimodel/train_stage3.py` | Stage-3 joint multi-task training | Empty — blocks Stage-3 |
-| 19 | `src/training_phase3_multimodel/trainer.py` | Unified multi-task trainer class | Empty — blocks Stage-3 |
-| 20 | `src/models/heads/multi_label.py` | Multi-label classification head (8 diseases) | Empty — blocks Stage-3 |
+| 18 | `src/training_phase3_multimodel/train_stage3.py` | Stage-3 joint multi-task training | Reserved for Phase-3 multi-disease pipeline. Currently unused but intentionally reserved. |
+| 19 | `src/training_phase3_multimodel/trainer.py` | Unified multi-task trainer class | Reserved for Phase-3 multi-disease pipeline. Currently unused but intentionally reserved. |
+| 20 | `src/models/heads/multi_label.py` | Multi-label classification head (8 diseases) | Empty — reserved for Stage-3 |
 | 21 | `src/models/__init__.py` | Models package init | Empty (functional but no exports) |
+
+> **Note:** `train_stage3.py` and `trainer.py` are intentional placeholders.
+> They are **not** current blockers — Phase-3 M2 experiments (ResNet18 fine-tune, EfficientNet-B3) are active via `train_stage2_finetune.py` and `train_stage2_efficientnet.py`.
 
 ---
 
@@ -235,7 +238,7 @@ These are either intentionally minimal or have low impact.
 
 ---
 
-**Last Updated:** February 24, 2026  
+**Last Updated:** March 7, 2026  
 **Status:** 28 empty files identified (22 actionable, 6 intentionally empty `__init__.py`)  
 **Critical Blockers:** 4 files block Stage-3 and paper-readiness  
-**Next Steps:** Phase A (unblock Stage-3) → Phase B (configs) → Phase C (eval + explainability)
+**Phase A Progress:** Partially addressed — `train_stage2_finetune.py` and `train_stage2_efficientnet.py` added; `train_stage3.py` and `trainer.py` reserved for future multi-disease pipeline.
