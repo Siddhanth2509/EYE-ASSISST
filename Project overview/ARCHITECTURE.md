@@ -271,12 +271,13 @@ src/models/
 ├── multi_task_models.py           [CLASS] Multi-task model (shared backbone + multiple heads)
 │
 ├── backbone/                      [BACKBONES] Feature extraction networks
-│   └── resnet.py                          ResNetBackbone (ResNet18/50/101)
+│   ├── resnet.py                          ResNetBackbone (ResNet18/50/101)
+│   └── efficientnet.py                    EfficientNetBackbone (B0/B3) ← added
 │
 └── heads/                         [HEADS] Task-specific output layers
     ├── dr_binary.py                       Binary DR classification head (1 output)
     ├── dr_severity.py                     DR severity grading head (5 classes: 0-4)
-    └── multi_label.py                     Multi-label disease classification head
+    └── multi_label.py                     Multi-label disease classification head (reserved)
 ```
 
 **Architecture Pattern:**
@@ -453,9 +454,11 @@ Original Image → Model → Grad-CAM Heatmap (red = high attention)
 ```
 src/training_phase3_multimodel/
 ├── train_stage1.py                [TRAINER] Stage-1: Train DR binary head only
-├── train_stage2.py                [TRAINER] Stage-2: Train DR severity head (freeze binary)
-├── train_stage3.py                [TRAINER] Stage-3: Joint training (all heads)
-└── trainer.py                     [CLASS] Unified trainer for multi-task models
+├── train_stage2.py                [TRAINER] Stage-2: Train DR severity head (ResNet18 baseline)
+├── train_stage2_finetune.py       [TRAINER] Stage-2 extended fine-tuning (ResNet18 E3+ runs)
+├── train_stage2_efficientnet.py   [TRAINER] Stage-2: EfficientNet-B3 @384px variant
+├── train_stage3.py                [TRAINER] Stage-3: Joint training (reserved for future)
+└── trainer.py                     [CLASS] Unified multi-task trainer (reserved for future)
 ```
 
 **Multi-Stage Training Strategy:**
@@ -724,8 +727,9 @@ gradcam.visualize(image, heatmap)
 | Version | Date | Changes |
 |---------|------|---------|
 | v1.0 | Feb 2026 | Initial architecture documentation |
+| v1.1 | Mar 2026 | Added EfficientNet-B3 backbone, Stage-2 training variants (fine-tune, efficientnet), updated Phase-3 milestones |
 
 ---
 
 **Maintained by:** EYE-ASSISST Development Team  
-**Last Updated:** February 8, 2026
+**Last Updated:** March 7, 2026
