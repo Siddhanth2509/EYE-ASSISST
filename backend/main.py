@@ -718,15 +718,52 @@ async def get_scan_details(scan_id: str):
     scan_data = scan_database[scan_id]
     return {
         "scan_id": scan_id,
-        "patient_id": scan_data["patient_id"],
+        "patient_id": scan_data.get("patient_id", "unknown"),
         "timestamp": scan_data["timestamp"],
-        "laterality": scan_data["laterality"],
-        "age": scan_data["age"],
+        "laterality": scan_data.get("laterality", "unknown"),
+        "age": scan_data.get("age"),  # Returns None if missing
         "prediction": scan_data["prediction"],
         "original_image": scan_data["original_image"],
         "heatmap_image": scan_data["heatmap_image"],
         "review_status": scan_data["review_status"],
         "doctor_review": scan_data.get("doctor_review")
+    }
+
+@app.post("/api/v1/review/{scan_id}")
+async def submit_review(
+    scan_id: str,
+    action: str = Form(...),
+    notes: Optional[str] = Form(None)
+):
+    """Submit doctor review for a scan."""
+    if scan_id not in scan_database:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    # Update scan with review
+    review_data = {
+        "action": action,
+        "notes": notes,
+        "reviewer": "doctor",
+        "reviewed_at": datetime.now().isoformat()
+    }
+    
+    # Map action to review_status
+    status_map = {
+        "approve": "approved",
+        "modify": "modified",
+        "override": "overridden"
+    }
+    
+    scan_database[scan_id]["doctor_review"] = review_data
+    scan_database[scan_id]["review_status"] = status_map.get(action, "reviewed")
+    
+    logger.info(f"Review submitted for {scan_id}: {action}")
+    
+    return {
+        "success": True,
+        "scan_id": scan_id,
+        "review_status": scan_database[scan_id]["review_status"],
+        "message": f"Review {action} submitted successfully"
     }
 
 # ============================================================================

@@ -461,10 +461,10 @@ function TechnicianDashboard() {
               ])
             )
           : {},
-        gradcam_available: !!data.gradcam?.overlay_base64,
+        gradcam_available: !!data.gradcam?.heatmap_base64,
         original_image: uploadedImage ?? undefined,
-        heatmap_image: data.gradcam?.overlay_base64
-          ? `data:image/png;base64,${data.gradcam.overlay_base64}`
+        heatmap_image: data.gradcam?.heatmap_base64
+          ? `data:image/png;base64,${data.gradcam.heatmap_base64}`
           : uploadedImage ?? undefined,
       };
 
@@ -793,52 +793,145 @@ function TechnicianDashboard() {
 function DoctorReviewPortal() {
   const [selectedScan, setSelectedScan] = useState<AnalysisResult | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(true);
-  const [showVessels, setShowVessels] = useState(false);
   const [reviewAction, setReviewAction] = useState('');
   const [notes, setNotes] = useState('');
   const [zoom, setZoom] = useState(100);
+  const [pendingScans, setPendingScans] = useState<AnalysisResult[]>([]);
+  const [scanDetails, setScanDetails] = useState<Record<string, any>>({});
 
-  // Mock scan data for review
-  const pendingScans: AnalysisResult[] = [
-    {
-      scan_id: 'SCAN-A7B2C9D1',
-      patient_id: 'P-2026-0042',
-      timestamp: '2026-03-25T09:30:00Z',
-      binary_result: 'DR Detected',
-      confidence: 91.5,
-      severity_level: 2,
-      severity_label: 'Moderate',
-      severity_color: '#F97316',
-      multi_disease_flags: {},
-      gradcam_available: true,
-      original_image: 'https://via.placeholder.com/512x512/1a1a2e/ffffff?text=Fundus+Image',
-      heatmap_image: 'https://via.placeholder.com/512x512/2d1b1b/ffffff?text=Heatmap',
-    },
-    {
-      scan_id: 'SCAN-E8F3G4H5',
-      patient_id: 'P-2026-0043',
-      timestamp: '2026-03-25T10:15:00Z',
-      binary_result: 'Normal',
-      confidence: 96.2,
-      severity_level: 0,
-      severity_label: 'Normal',
-      severity_color: '#10B981',
-      multi_disease_flags: {},
-      gradcam_available: true,
-      original_image: 'https://via.placeholder.com/512x512/1a1a2e/ffffff?text=Fundus+Image+2',
-      heatmap_image: 'https://via.placeholder.com/512x512/1b2d1b/ffffff?text=Heatmap+2',
-    },
-  ];
+  // Fetch real scans from backend
+  useEffect(() => {
+    const fetchScans = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/scans`);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const scans = data.scans || [];
+        
+        // Convert backend format to frontend format
+        const converted = scans.map((scan: any) => ({
+          scan_id: scan.scan_id,
+          patient_id: scan.patient_id,
+          timestamp: scan.timestamp,
+          binary_result: scan.binary_result,
+          confidence: scan.confidence,
+          severity_level: scan.severity_level,
+          severity_label: scan.severity_label,
+          multi_disease_flags: {},
+          gradcam_available: true,
+          severity_color: ['#10B981', '#F59E0B', '#F97316', '#EF4444', '#DC2626'][scan.severity_level] || '#10B981',
+          original_image: undefined, // Will be loaded on selection
+          heatmap_image: undefined,  // Will be loaded on selection
+        }));
+        
+        setPendingScans(converted);
+      } catch (err) {
+        console.error('Failed to fetch scans:', err);
+      }
+    };
+    
+    fetchScans();
+    const interval = setInterval(fetchScans, 5000); // Refresh every 5s
+    return () => clearInterval(interval);
+  }, []);
 
-  const handleSubmitReview = () => {
+  // Fetch full scan details when a scan is selected
+  useEffect(() => {
+    if (!selectedScan || selectedScan.original_image?.startsWith('data:image')) {
+      // Already has images loaded
+      return;
+    }
+    
+    const fetchDetails = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/scan/${selectedScan.scan_id}`);
+        if (!response.ok) {
+          console.error('Failed to fetch scan details:', response.status);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('Fetched scan details:', { scan_id: data.scan_id, has_images: !!data.original_image });
+        
+        setScanDetails(prev => ({
+          ...prev,
+          [selectedScan.scan_id]: data
+        }));
+        
+        // Update selected scan with images
+        setSelectedScan(prev => prev ? {
+          ...prev,
+          original_image: `data:image/png;base64,${data.original_image}`,
+          heatmap_image: `data:image/png;base64,${data.heatmap_image}`,
+        } : null);
+      } catch (err) {
+        console.error('Failed to fetch scan details:', err);
+      }
+    };
+    
+    fetchDetails();
+  }, [selectedScan?.scan_id]);
+
+  const handleSubmitReview = async () => {
     if (!reviewAction) {
       toast.error('Please select an action');
       return;
     }
-    toast.success(`Review submitted: ${reviewAction}`);
-    setSelectedScan(null);
-    setReviewAction('');
-    setNotes('');
+    if (!selectedScan) {
+      toast.error('No scan selected');
+      return;
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('action', reviewAction);
+      if (notes) {
+        formData.append('notes', notes);
+      }
+      
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/review/${selectedScan.scan_id}`,
+        { method: 'POST', body: formData }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit review');
+      }
+      
+      const data = await response.json();
+      toast.success(`Review ${reviewAction}d successfully`);
+      
+      // Refresh scan list
+      const scanListResponse = await fetch(`${API_BASE_URL}/api/scans`);
+      if (scanListResponse.ok) {
+        const scanListData = await scanListResponse.json();
+        const formattedScans: AnalysisResult[] = scanListData.scans.map((s: any) => ({
+          scan_id: s.scan_id,
+          patient_id: s.patient_id,
+          timestamp: s.timestamp,
+          binary_result: s.binary_result,
+          confidence: s.confidence,
+          severity_level: s.severity_level,
+          severity_label: s.severity_label,
+          severity_color: 
+            s.severity_level === 0 ? '#10B981' :
+            s.severity_level === 1 ? '#F59E0B' :
+            s.severity_level === 2 ? '#F97316' :
+            s.severity_level === 3 ? '#EF4444' : '#DC2626',
+          multi_disease_flags: {},
+          gradcam_available: true,
+        }));
+        setPendingScans(formattedScans.filter(s => s.binary_result.includes('DR')));
+      }
+      
+      setSelectedScan(null);
+      setReviewAction('');
+      setNotes('');
+    } catch (error: any) {
+      console.error('Failed to submit review:', error);
+      toast.error(`Failed to submit review: ${error.message}`);
+    }
   };
 
   return (
@@ -904,14 +997,6 @@ function DoctorReviewPortal() {
                   />
                   <Label htmlFor="heatmap-toggle" className="text-sm">Heatmap</Label>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={showVessels} 
-                    onCheckedChange={setShowVessels}
-                    id="vessel-toggle"
-                  />
-                  <Label htmlFor="vessel-toggle" className="text-sm">Vessels</Label>
-                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom(Math.max(50, zoom - 25))}>
@@ -954,11 +1039,6 @@ function DoctorReviewPortal() {
                       className="max-w-full max-h-[60vh] object-contain border border-white/10 rounded-lg"
                       style={{ transform: `scale(${zoom / 100})` }}
                     />
-                    {showVessels && (
-                      <div className="absolute inset-0 pointer-events-none">
-                        {/* Vessel overlay would go here */}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
