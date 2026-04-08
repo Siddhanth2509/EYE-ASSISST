@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* EYE-ASSISST Medical Dark Theme */
+    --background: 222 47% 5%;
+    --foreground: 220 14% 96%;
+    --card: 220 30% 8%;
+    --card-foreground: 220 14% 96%;
+    --popover: 220 30% 8%;
+    --popover-foreground: 220 14% 96%;
+    --primary: 187 85% 53%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 220 14% 96%;
+    --muted: 220 20% 14%;
+    --muted-foreground: 215 16% 62%;
+    --accent: 187 85% 53%;
+    --accent-foreground: 222 47% 5%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 15%;
+    --input: 220 15% 15%;
+    --ring: 187 85% 53%;
+    --radius: 0.625rem;
+    
+    /* Severity Colors */
+    --severity-normal: 160 84% 39%;
+    --severity-mild: 38 92% 50%;
+    --severity-moderate: 25 95% 53%;
+    --severity-severe: 0 84% 60%;
+    --severity-proliferative: 0 72% 51%;
+    
+    /* Sidebar */
+    --sidebar-background: 220 30% 6%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 187 85% 53%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent: 220 20% 14%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-ring: 187 85% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  code, pre, .mono {
+    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  }
+}
+
+@layer components {
+  /* Medical Panel Styling */
+  .medical-panel {
+    @apply bg-card border border-border/50 rounded-[10px];
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+  
+  /* Technical Corner Brackets */
+  .corner-brackets {
+    position: relative;
+  }
+  
+  .corner-brackets::before,
+  .corner-brackets::after,
+  .corner-brackets > .corner-bracket-tl,
+  .corner-brackets > .corner-bracket-br {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: rgba(255, 255, 255, 0.15);
+    border-style: solid;
+    pointer-events: none;
+  }
+  
+  .corner-brackets::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+  }
+  
+  .corner-brackets::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+  }
+  
+  /* Severity Badges */
+  .severity-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+  }
+  
+  .severity-normal {
+    @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  }
+  
+  .severity-mild {
+    @apply bg-amber-500/20 text-amber-400 border border-amber-500/30;
+  }
+  
+  .severity-moderate {
+    @apply bg-orange-500/20 text-orange-400 border border-orange-500/30;
+  }
+  
+  .severity-severe {
+    @apply bg-red-500/20 text-red-400 border border-red-500/30;
+  }
+  
+  .severity-proliferative {
+    @apply bg-red-600/20 text-red-500 border border-red-600/30;
+  }
+  
+  /* Progress Bar Animation */
+  .progress-sweep {
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent);
+    animation: progressSweep 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes progressSweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  /* Noise Overlay */
+  .noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.04;
+    z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+  
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+  
+  /* Drag and Drop Zone */
+  .drop-zone {
+    @apply border-2 border-dashed border-border rounded-lg transition-all duration-200;
+  }
+  
+  .drop-zone.drag-over {
+    @apply border-primary bg-primary/5;
+  }
+  
+  /* Button Hover Effects */
+  .btn-medical {
+    @apply transition-all duration-150;
+  }
+  
+  .btn-medical:hover {
+    transform: translateY(-1px);
+  }
+  
+  .btn-medical:active {
+    transform: scale(0.98);
+  }
+  
+  /* Heatmap Legend */
+  .heatmap-legend {
+    background: linear-gradient(90deg, 
+      transparent 0%,
+      rgba(255, 255, 0, 0.3) 25%,
+      rgba(255, 165, 0, 0.5) 50%,
+      rgba(255, 69, 0, 0.7) 75%,
+      rgba(255, 0, 0, 0.9) 100%
+    );
+    height: 8px;
+    border-radius: 4px;
+  }
+  
+  /* Status Indicator */
+  .status-online {
+    @apply w-2 h-2 rounded-full bg-emerald-500;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  /* Chart Container */
+  .chart-container {
+    @apply relative;
+  }
+  
+  .chart-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, 
+      hsl(var(--primary) / 0.1) 0%, 
+      transparent 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+}
