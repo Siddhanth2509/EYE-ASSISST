@@ -6,6 +6,7 @@ AI-Powered Eye Disease Screening API
 import os
 import io
 import sys
+import json
 import base64
 import uuid
 import logging
@@ -330,9 +331,69 @@ initialize_fundus_classifier(
 )
 print("="*70 + "\n")
 
-# In-memory storage (replace with database in production)
+# ============================================================================
+# DATABASE PERSISTENCE
+# ============================================================================
+
+# Define persistence file paths
+SCAN_DB_PATH = Path("scans_database.json")
+REVIEW_DB_PATH = Path("reviews_database.json")
+
+# In-memory storage with persistence
 scan_database: Dict[str, Dict] = {}
 review_database: Dict[str, Dict] = {}
+
+def load_databases():
+    """Load scan and review databases from JSON files if they exist."""
+    global scan_database, review_database
+    
+    if SCAN_DB_PATH.exists():
+        try:
+            with open(SCAN_DB_PATH, 'r') as f:
+                scan_database = json.load(f)
+                print(f"✅ Loaded {len(scan_database)} scans from database")
+        except Exception as e:
+            logger.error(f"Failed to load scan database: {e}")
+            scan_database = {}
+    
+    if REVIEW_DB_PATH.exists():
+        try:
+            with open(REVIEW_DB_PATH, 'r') as f:
+                review_database = json.load(f)
+                print(f"✅ Loaded {len(review_database)} reviews from database")
+        except Exception as e:
+            logger.error(f"Failed to load review database: {e}")
+            review_database = {}
+
+def save_databases():
+    """
+    Save scan and review databases to JSON files.
+    
+    Strips large base64 image strings to keep JSON files small.
+    Images are kept in memory for API responses but not persisted to disk.
+    """
+    try:
+        # Serialize scans without large image data
+        serializable_scans = {}
+        for scan_id, scan_data in scan_database.items():
+            clean_scan = scan_data.copy()
+            # Strip large base64 strings - they're not needed for persistence
+            clean_scan.pop("original_image", None)
+            clean_scan.pop("heatmap_image", None)
+            serializable_scans[scan_id] = clean_scan
+        
+        with open(SCAN_DB_PATH, 'w') as f:
+            json.dump(serializable_scans, f, indent=2)
+        
+        with open(REVIEW_DB_PATH, 'w') as f:
+            json.dump(review_database, f, indent=2)
+        
+        logger.info(f"✅ Databases saved successfully ({len(serializable_scans)} scans, {len(review_database)} reviews)")
+    except Exception as e:
+        logger.error(f"Failed to save databases: {e}")
+
+# Load databases on startup
+load_databases()
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -428,6 +489,7 @@ async def analyze_image(
             "review_status": "pending"
         }
         scan_database[scan_id] = scan_data
+        save_databases()
         
         return AnalysisResult(
             scan_id=scan_id,
@@ -523,6 +585,14 @@ async def analyze_image_compat(
         scan_database[analysis_id] = scan_data
         print(f"  ✅ Scan {analysis_id} stored (laterality: {laterality})")
         
+        # Ensure Grad-CAM has proper data:image prefix
+        formatted_heatmap = heatmap_base64
+        if heatmap_base64 and not heatmap_base64.startswith('data:'):
+            formatted_heatmap = f"data:image/png;base64,{heatmap_base64}"
+        
+        # Save databases
+        save_databases()
+        
         # Return response in frontend-expected format
         return {
             "analysis_id": analysis_id,
@@ -546,7 +616,7 @@ async def analyze_image_compat(
             },
             "gradcam": {
                 "available": include_gradcam,
-                "heatmap_base64": heatmap_base64
+                "heatmap_base64": formatted_heatmap
             }
         }
         
@@ -562,10 +632,20 @@ async def get_heatmap(scan_id: str):
         raise HTTPException(status_code=404, detail="Scan not found")
     
     scan_data = scan_database[scan_id]
+    
+    # Ensure both images have proper data:image prefix
+    original_image = scan_data["original_image"]
+    if original_image and not original_image.startswith('data:'):
+        original_image = f"data:image/png;base64,{original_image}"
+    
+    heatmap_image = scan_data["heatmap_image"]
+    if heatmap_image and not heatmap_image.startswith('data:'):
+        heatmap_image = f"data:image/png;base64,{heatmap_image}"
+    
     return {
         "scan_id": scan_id,
-        "heatmap_image": scan_data["heatmap_image"],
-        "original_image": scan_data["original_image"]
+        "heatmap_image": heatmap_image,
+        "original_image": original_image
     }
 
 @app.post("/api/v1/review")
@@ -585,9 +665,13 @@ async def submit_review(review: DoctorReview):
         "timestamp": review.timestamp
     }
     
-    review_database[review.review_id] = review_data
+    # Use generated review_id
+    review_database[review_data["review_id"]] = review_data
     scan_database[review.scan_id]["review_status"] = review.action
     scan_database[review.scan_id]["doctor_review"] = review_data
+    
+    # Save databases
+    save_databases()
     
     return {"status": "success", "review_id": review_data["review_id"]}
 
@@ -716,6 +800,16 @@ async def get_scan_details(scan_id: str):
         raise HTTPException(status_code=404, detail="Scan not found")
     
     scan_data = scan_database[scan_id]
+    
+    # Ensure images have proper data:image prefix
+    original_image = scan_data["original_image"]
+    if original_image and not original_image.startswith('data:'):
+        original_image = f"data:image/png;base64,{original_image}"
+    
+    heatmap_image = scan_data["heatmap_image"]
+    if heatmap_image and not heatmap_image.startswith('data:'):
+        heatmap_image = f"data:image/png;base64,{heatmap_image}"
+    
     return {
         "scan_id": scan_id,
         "patient_id": scan_data.get("patient_id", "unknown"),
@@ -723,8 +817,8 @@ async def get_scan_details(scan_id: str):
         "laterality": scan_data.get("laterality", "unknown"),
         "age": scan_data.get("age"),  # Returns None if missing
         "prediction": scan_data["prediction"],
-        "original_image": scan_data["original_image"],
-        "heatmap_image": scan_data["heatmap_image"],
+        "original_image": original_image,
+        "heatmap_image": heatmap_image,
         "review_status": scan_data["review_status"],
         "doctor_review": scan_data.get("doctor_review")
     }
@@ -758,6 +852,9 @@ async def submit_review(
     scan_database[scan_id]["review_status"] = status_map.get(action, "reviewed")
     
     logger.info(f"Review submitted for {scan_id}: {action}")
+    
+    # Save databases
+    save_databases()
     
     return {
         "success": True,

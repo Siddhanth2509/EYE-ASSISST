@@ -1,0 +1,34 @@
+{
+  "SCAN-FE4D7788": {
+    "scan_id": "SCAN-FE4D7788",
+    "patient_id": "P-2026-009",
+    "laterality": "OD",
+    "timestamp": "2026-04-08T17:15:12.312023",
+    "prediction": {
+      "binary_result": "DR Detected",
+      "confidence": 57.11,
+      "severity_level": 2,
+      "severity_label": "Moderate",
+      "severity_color": "#F97316",
+      "severity_probs": [
+        0.00016133552708197385,
+        0.008126006461679935,
+        0.5711433291435242,
+        0.22055105865001678,
+        0.2000182569026947
+      ],
+      "multi_disease": {
+        "amd": {
+          "detected": false,
+          "confidence": 0.0
+        },
+        "glaucoma": {
+          "detected": false,
+          "confidence": 0.0
+        },
+        "cataract": {
+          "detected": false,
+          "confidence": 0.0
+        }
+      },
+      "features": 

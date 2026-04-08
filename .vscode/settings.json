@@ -1,0 +1,52 @@
+{
+  "files.exclude": {
+    "**/*cleanup*.py": true,
+    "**/*reorgan*.py": true,
+    "**/*collect*.py": true,
+    "**/*execute*.py": true,
+    "**/*complete*.py": true,
+    "**/*nuke*.py": true,
+    "**/*organize*.py": true,
+    "**/*update_import*.py": true,
+    "**/*verify*.py": true,
+    "**/*train_fundus*.py": true,
+    "**/*test_valid*.py": true,
+    "**/FINAL*.md": true,
+    "**/FIXES*.md": true,
+    "**/FOLLOW*.md": true,
+    "**/FUNDUS*.md": true,
+    "**/ANALYSIS*.md": true,
+    "**/REORGAN*.md": true,
+    "**/READ_ME*.md": true,
+    "**/RUN_*.md": true,
+    "**/TEST_FUNDUS*.md": true,
+    "**/DEPLOYMENT*.md": true,
+    "**/COMMANDS.txt": true,
+    "**/START_APP.bat": true,
+    "**/STARTUP.sh": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/*.egg-info": true
+  },
+  "search.exclude": {
+    "**/*cleanup*.py": true,
+    "**/*reorgan*.py": true,
+    "**/*collect*.py": true,
+    "**/*execute*.py": true,
+    "**/*complete*.py": true,
+    "**/FINAL*.md": true,
+    "**/FIXES*.md": true,
+    "**/FOLLOW*.md": true,
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/__pycache__": true
+  },
+  "python.analysis.exclude": [
+    "**/test_*.py",
+    "**/*_test.py",
+    "**/*cleanup*.py",
+    "**/*reorgan*.py",
+    "**/*collect*.py"
+  ]
+}

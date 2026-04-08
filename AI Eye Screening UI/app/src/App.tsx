@@ -860,11 +860,18 @@ function DoctorReviewPortal() {
         }));
         
         // Update selected scan with images
-        setSelectedScan(prev => prev ? {
-          ...prev,
-          original_image: `data:image/png;base64,${data.original_image}`,
-          heatmap_image: `data:image/png;base64,${data.heatmap_image}`,
-        } : null);
+        setSelectedScan(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            original_image: data.original_image.startsWith('data:image')
+              ? data.original_image
+              : `data:image/png;base64,${data.original_image}`,
+            heatmap_image: data.heatmap_image.startsWith('data:image')
+              ? data.heatmap_image
+              : `data:image/png;base64,${data.heatmap_image}`,
+          };
+        });
       } catch (err) {
         console.error('Failed to fetch scan details:', err);
       }
