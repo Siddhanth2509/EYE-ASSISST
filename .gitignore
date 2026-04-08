@@ -148,6 +148,55 @@ venv.bak/
 .spyderproject
 .spyproject
 
+# ============================================================================
+# Auto-Generated Files (DO NOT COMMIT) - AGGRESSIVE PATTERNS
+# ============================================================================
+
+# Wildcard patterns to catch ANY variant of cleanup/auto-gen files
+*cleanup*.py
+*reorgan*.py
+*collect*.py
+*execute*.py
+*complete*.py
+*nuke*.py
+*organize*.py
+*update_import*.py
+*verify*.py
+*train_fundus*.py
+*test_valid*.py
+
+# Wildcard patterns for documentation
+*FINAL*.md
+*FIXES*.md
+*FOLLOW*.md
+*FUNDUS*.md
+*ANALYSIS*.md
+*REORGAN*.md
+*READ_ME*.md
+*RUN_*.md
+*TEST_FUNDUS*.md
+*DEPLOYMENT*.md
+COMMANDS.txt
+
+# All variations of these scripts
+collect_non_fundus.py
+complete_moves.py
+execute_cleanup.py
+execute_reorganization.py
+final_cleanup.py
+nuke_garbage.py
+organize_root.py
+reorganize_project.py
+update_imports.py
+update_imports_actual.py
+verify_fixes.py
+test_validation.py
+train_fundus_classifier.py
+
+# Batch/Shell scripts
+START_APP.bat
+STARTUP.sh
+
 # Rope project settings
 .ropeproject
 
