@@ -1,21 +1,21 @@
 {
-  "SCAN-FE4D7788": {
-    "scan_id": "SCAN-FE4D7788",
-    "patient_id": "P-2026-009",
+  "SCAN-43D69CD7": {
+    "scan_id": "SCAN-43D69CD7",
+    "patient_id": "P-2026-003",
     "laterality": "OD",
-    "timestamp": "2026-04-08T17:15:12.312023",
+    "timestamp": "2026-04-09T13:35:07.028086",
     "prediction": {
-      "binary_result": "DR Detected",
-      "confidence": 57.11,
-      "severity_level": 2,
-      "severity_label": "Moderate",
-      "severity_color": "#F97316",
+      "binary_result": "Normal",
+      "confidence": 99.4,
+      "severity_level": 0,
+      "severity_label": "Normal",
+      "severity_color": "#10B981",
       "severity_probs": [
-        0.00016133552708197385,
-        0.008126006461679935,
-        0.5711433291435242,
-        0.22055105865001678,
-        0.2000182569026947
+        0.994030773639679,
+        0.0017308671958744526,
+        0.0010756355477496982,
+        0.0017246273346245289,
+        0.0014380334177985787
       ],
       "multi_disease": {
         "amd": {

@@ -382,8 +382,22 @@ def main():
     print(f"Model: {args.model} with {args.num_diseases} disease outputs")
     
     # Loss and optimizer
-    # Use BCEWithLogitsLoss for multi-label classification
-    criterion = nn.BCEWithLogitsLoss()
+    # Compute pos_weight from training labels to handle class imbalance
+    # pos_weight[i] = (num_negatives / num_positives) for class i
+    # Tells the loss: "penalise missing a rare positive more than a common one"
+    label_cols = ['dr', 'glaucoma', 'amd', 'cataract', 'hypertensive', 'myopic']
+    import pandas as pd
+    df_train_meta = pd.read_csv(args.train_csv)
+    total = len(df_train_meta)
+    pos_counts = df_train_meta[label_cols].sum().values.astype(np.float32)
+    neg_counts = total - pos_counts
+    # Clip to avoid division by zero; cap weight at 20 to prevent instability
+    pos_weight_vals = np.clip(neg_counts / np.maximum(pos_counts, 1), 1.0, 20.0)
+    pos_weight = torch.tensor(pos_weight_vals, dtype=torch.float32).to(args.device)
+    print("\n=== Class Pos Weights (imbalance correction) ===")
+    for name, w in zip(label_cols, pos_weight_vals):
+        print(f"  {name:13s}: {w:.2f}x")
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=5)
     
@@ -407,12 +421,36 @@ def main():
         print(f"Val Loss: {val_loss:.4f}")
         print(f"Val F1 (micro/macro): {val_metrics['f1_micro']:.4f} / {val_metrics['f1_macro']:.4f}")
         print(f"Val AUC (macro): {val_metrics['auc_macro']:.4f}")
-        
-        # Per-class metrics
+
+        # Per-class metrics — F1 + AUC side by side
         disease_names = ['DR', 'Glaucoma', 'AMD', 'Cataract', 'Hypertensive', 'Myopic']
-        print("\nPer-class F1 scores:")
-        for name, f1 in zip(disease_names, val_metrics['f1_per_class']):
-            print(f"  {name:15s}: {f1:.4f}")
+        print("\nPer-class metrics (F1 | AUC):")
+        for name, f1, auc in zip(disease_names, val_metrics['f1_per_class'], val_metrics['auc_per_class']):
+            auc_str = f"{auc:.4f}" if not np.isnan(auc) else "  N/A "
+            flag = "OK" if f1 > 0.05 else ("SIG" if (not np.isnan(auc) and auc > 0.55) else "---")
+            print(f"  {name:13s}: F1={f1:.4f}  AUC={auc_str}  [{flag}]")    
+
+        # After epoch 1, print raw prediction distribution to diagnose threshold issues
+        if epoch == 1:
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                _tmp_preds, _tmp_labels = [], []
+                model.eval()
+                with torch.no_grad():
+                    for _imgs, _lbls in list(val_loader)[:5]:  # 5 batches only
+                        _logits = model(_imgs.to(args.device))
+                        _tmp_preds.append(torch.sigmoid(_logits).cpu().numpy())
+                        _tmp_labels.append(_lbls.numpy())
+                _preds_sample = np.vstack(_tmp_preds)[:20]
+                print("\n--- Prediction Distribution Diagnostic (first 20 val samples) ---")
+                print("Raw sigmoid outputs (should vary per class, not all near 0 or 1):")
+                print(f"  mean per class: {_preds_sample.mean(axis=0).round(3)}")
+                print(f"  min  per class: {_preds_sample.min(axis=0).round(3)}")
+                print(f"  max  per class: {_preds_sample.max(axis=0).round(3)}")
+                print(f"  Threshold=0.5 would predict positives: {(_preds_sample >= 0.5).sum(axis=0)}")
+                print(f"  Threshold=0.3 would predict positives: {(_preds_sample >= 0.3).sum(axis=0)}")
+                print("--- End Diagnostic ---")
         
         # Update scheduler
         scheduler.step(val_metrics['f1_macro'])
