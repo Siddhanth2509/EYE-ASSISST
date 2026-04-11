@@ -430,27 +430,6 @@ def main():
             flag = "OK" if f1 > 0.05 else ("SIG" if (not np.isnan(auc) and auc > 0.55) else "---")
             print(f"  {name:13s}: F1={f1:.4f}  AUC={auc_str}  [{flag}]")    
 
-        # After epoch 1, print raw prediction distribution to diagnose threshold issues
-        if epoch == 1:
-            import warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
-                _tmp_preds, _tmp_labels = [], []
-                model.eval()
-                with torch.no_grad():
-                    for _imgs, _lbls in list(val_loader)[:5]:  # 5 batches only
-                        _logits = model(_imgs.to(args.device))
-                        _tmp_preds.append(torch.sigmoid(_logits).cpu().numpy())
-                        _tmp_labels.append(_lbls.numpy())
-                _preds_sample = np.vstack(_tmp_preds)[:20]
-                print("\n--- Prediction Distribution Diagnostic (first 20 val samples) ---")
-                print("Raw sigmoid outputs (should vary per class, not all near 0 or 1):")
-                print(f"  mean per class: {_preds_sample.mean(axis=0).round(3)}")
-                print(f"  min  per class: {_preds_sample.min(axis=0).round(3)}")
-                print(f"  max  per class: {_preds_sample.max(axis=0).round(3)}")
-                print(f"  Threshold=0.5 would predict positives: {(_preds_sample >= 0.5).sum(axis=0)}")
-                print(f"  Threshold=0.3 would predict positives: {(_preds_sample >= 0.3).sum(axis=0)}")
-                print("--- End Diagnostic ---")
         
         # Update scheduler
         scheduler.step(val_metrics['f1_macro'])
