@@ -453,14 +453,7 @@ function TechnicianDashboard() {
         severity_level: sevGrade,
         severity_label: data.dr_severity?.label || severityLabelMap[sevGrade] || 'Normal',
         severity_color: data.dr_severity?.color || severityColorMap[sevGrade] || '#10B981',
-        multi_disease_flags: data.multilabel
-          ? Object.fromEntries(
-              Object.entries(data.multilabel).map(([k, v]) => [
-                k.toLowerCase(),
-                { detected: (v as number) > 50, confidence: (v as number) / 100 },
-              ])
-            )
-          : {},
+        multi_disease_flags: data.multi_disease ?? {},
         gradcam_available: !!data.gradcam?.heatmap_base64,
         original_image: uploadedImage ?? undefined,
         heatmap_image: data.gradcam?.heatmap_base64
@@ -754,23 +747,49 @@ function TechnicianDashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Multi-Disease Flags */}
+                {/* Disease Diagnosis Panel */}
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Multi-Disease Screening</CardTitle>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-primary" />
+                      Disease Diagnosis
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">AI confidence per condition</p>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    {Object.entries(analysisResult.multi_disease_flags).map(([disease, data]: [string, any]) => (
-                      <div key={disease} className="flex items-center justify-between">
-                        <span className="text-sm capitalize">{disease}</span>
-                        <Badge 
-                          variant={data.detected ? "destructive" : "outline"}
-                          className="text-xs"
-                        >
-                          {data.detected ? 'Detected' : 'Not Detected'}
-                        </Badge>
-                      </div>
-                    ))}
+                  <CardContent className="space-y-3">
+                    {Object.entries(analysisResult.multi_disease_flags).map(([key, d]: [string, any]) => {
+                      const detected = d.detected;
+                      const conf = typeof d.confidence === 'number' ? d.confidence : 0;
+                      const label = d.name || key.replace('_', ' ');
+                      const barColor = detected ? '#EF4444' : '#10B981';
+                      return (
+                        <div key={key}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium capitalize">{label}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs mono" style={{ color: barColor }}>
+                                {conf.toFixed(1)}%
+                              </span>
+                              <Badge
+                                variant={detected ? 'destructive' : 'outline'}
+                                className="text-xs px-1.5 py-0"
+                              >
+                                {detected ? 'Positive' : 'Negative'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${Math.min(conf, 100)}%`, backgroundColor: barColor }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {Object.keys(analysisResult.multi_disease_flags).length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-2">No disease data available</p>
+                    )}
                   </CardContent>
                 </Card>
 

@@ -1,21 +1,21 @@
 {
-  "SCAN-43D69CD7": {
-    "scan_id": "SCAN-43D69CD7",
+  "SCAN-BC354AE0": {
+    "scan_id": "SCAN-BC354AE0",
     "patient_id": "P-2026-003",
     "laterality": "OD",
-    "timestamp": "2026-04-09T13:35:07.028086",
+    "timestamp": "2026-04-11T07:15:44.799489",
     "prediction": {
-      "binary_result": "Normal",
-      "confidence": 99.4,
-      "severity_level": 0,
-      "severity_label": "Normal",
-      "severity_color": "#10B981",
+      "binary_result": "DR Detected",
+      "confidence": 58.16,
+      "severity_level": 2,
+      "severity_label": "Moderate",
+      "severity_color": "#F97316",
       "severity_probs": [
-        0.994030773639679,
-        0.0017308671958744526,
-        0.0010756355477496982,
-        0.0017246273346245289,
-        0.0014380334177985787
+        0.003575043985620141,
+        0.0003663920215331018,
+        0.581599771976471,
+        0.2497963309288025,
+        0.1646624654531479
       ],
       "multi_disease": {
         "amd": {

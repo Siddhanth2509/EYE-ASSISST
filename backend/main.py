@@ -316,9 +316,104 @@ class RealDRModel:
             features = self.model.backbone(input_tensor)
         return features
 
+# ============================================================================
+# PHASE 3: MULTI-DISEASE DETECTOR (ResNet50, 6 classes)
+# ============================================================================
+
+class _MultiDiseaseNet(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        base = models.resnet50(weights=None)
+        feat_dim = base.fc.in_features
+        self.backbone   = torch.nn.Sequential(*list(base.children())[:-1])
+        self.flatten    = torch.nn.Flatten()
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Dropout(0.3), torch.nn.Linear(feat_dim, 256),
+            torch.nn.ReLU(), torch.nn.Dropout(0.2), torch.nn.Linear(256, 6)
+        )
+    def forward(self, x):
+        return self.classifier(self.flatten(self.backbone(x)))
+
+
+class MultiDiseaseDetector:
+    """Phase 3 multi-disease classifier with calibrated thresholds."""
+
+    DISEASE_KEYS  = ['dr', 'glaucoma', 'amd', 'cataract', 'hypertensive', 'myopic']
+    DISEASE_NAMES = ['Diabetic Retinopathy', 'Glaucoma', 'AMD',
+                     'Cataract', 'Hypertensive Retinopathy', 'Myopic Degeneration']
+    # Defaults from calibrate_thresholds.py; overridden by threshold_config.json
+    DEFAULT_THRESHOLDS = {
+        'dr': 0.60, 'glaucoma': 0.35, 'amd': 0.15,
+        'cataract': 0.80, 'hypertensive': 0.25, 'myopic': 0.60
+    }
+
+    def __init__(self):
+        self.device     = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model      = None
+        self.loaded     = False
+        self.thresholds = dict(self.DEFAULT_THRESHOLDS)
+        self.transform  = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        self._load()
+
+    def _load(self):
+        ckpt_path = PROJECT_ROOT / 'phase3_multi_disease' / 'checkpoints' \
+                    / 'multidisease_resnet50_20260409_233715' / 'best_model.pt'
+        cfg_path  = ckpt_path.parent / 'threshold_config.json'
+
+        if not ckpt_path.exists():
+            logger.warning(f"Phase 3 model not found at {ckpt_path} — multi-disease disabled")
+            return
+        try:
+            self.model = _MultiDiseaseNet().to(self.device)
+            ckpt = torch.load(ckpt_path, map_location=self.device, weights_only=False)
+            self.model.load_state_dict(ckpt['model_state_dict'])
+            self.model.eval()
+            self.loaded = True
+            print(f"Phase 3 multi-disease model loaded (epoch {ckpt.get('epoch', '?')}, "
+                  f"best F1={ckpt.get('best_f1', 0):.4f})")
+            if cfg_path.exists():
+                with open(cfg_path) as f:
+                    cfg = json.load(f)
+                self.thresholds.update(cfg.get('thresholds', {}))
+                print(f"  Calibrated thresholds: {self.thresholds}")
+        except Exception as e:
+            logger.warning(f"Phase 3 model load failed: {e} — multi-disease disabled")
+
+    def predict(self, image: Image.Image) -> Dict[str, Any]:
+        """Run multi-disease inference; returns per-class detection flags."""
+        if not self.loaded:
+            return self._empty()
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        tensor = self.transform(image).unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            probs = torch.sigmoid(self.model(tensor)).cpu().numpy()[0]
+        flags = {}
+        for i, key in enumerate(self.DISEASE_KEYS):
+            prob   = float(probs[i])
+            thresh = self.thresholds.get(key, 0.5)
+            flags[key] = {
+                'detected':   bool(prob >= thresh),
+                'confidence': round(prob * 100, 1),
+                'threshold':  thresh,
+                'name':       self.DISEASE_NAMES[i]
+            }
+        return flags
+
+    def _empty(self) -> Dict[str, Any]:
+        return {k: {'detected': False, 'confidence': 0.0,
+                    'threshold': self.thresholds.get(k, 0.5), 'name': n}
+                for k, n in zip(self.DISEASE_KEYS, self.DISEASE_NAMES)}
+
+
 # Initialize model and Grad-CAM
 model = RealDRModel()
 gradcam_generator = GradCAMGenerator(model)
+multi_disease_detector = MultiDiseaseDetector()
 
 # Initialize fundus classifier (CRITICAL - must happen at startup)
 print("\n" + "="*70)
@@ -472,7 +567,10 @@ async def analyze_image(
         
         # Run AI inference
         prediction = model.predict(image)
-        
+
+        # Phase 3: multi-disease detection
+        md_flags = multi_disease_detector.predict(image)
+
         # Generate Grad-CAM heatmap
         heatmap_base64 = gradcam_generator.generate_heatmap(image, prediction)
         
@@ -501,7 +599,7 @@ async def analyze_image(
             severity_label=prediction["severity_label"],
             severity_color=prediction["severity_color"],
             severity_probs=prediction["severity_probs"],
-            multi_disease_flags=prediction["multi_disease"],
+            multi_disease_flags=md_flags,
             gradcam_available=True
         )
         
@@ -564,6 +662,11 @@ async def analyze_image_compat(
         print(f"  Running model prediction...")
         prediction = model.predict(image)
         print(f"  Prediction: {prediction['severity_label']} (confidence: {prediction['confidence']:.1f}%)")
+
+        # Phase 3: multi-disease detection
+        md_flags = multi_disease_detector.predict(image)
+        detected = [k for k, v in md_flags.items() if v['detected']]
+        print(f"  Multi-disease flags: {detected if detected else 'none'}")
         
         # Generate Grad-CAM heatmap if requested
         heatmap_base64 = None
@@ -607,6 +710,7 @@ async def analyze_image_compat(
                 "color": prediction["severity_color"],
                 "probabilities": prediction["severity_probs"]
             },
+            "multi_disease": md_flags,
             "multilabel": {
                 "microaneurysms": 0,
                 "hemorrhages": 0,
