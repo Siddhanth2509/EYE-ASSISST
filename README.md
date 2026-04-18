@@ -1,411 +1,186 @@
-# 👁️ **EYE-ASSISST**
+# EYE-ASSISST — AI-Powered Multi-Disease Eye Diagnosis Platform
 
-### AI-Powered Eye Disease Detection & Clinical Decision Support Platform
-
-> **An end-to-end medical imaging ML system for early eye-disease screening — designed with clinical rigor, external validation, and human-in-the-loop safety.**
-
-⚠️ **Medical Disclaimer**
-This project is strictly for **educational and research purposes**.
-It **does not provide medical diagnosis or prescriptions**.
-All final decisions must be made by **licensed ophthalmologists**.
+> **Production-scale** retinal fundus analysis system detecting **6 eye diseases** using deep learning.  
+> Built with FastAPI backend, React frontend, and ResNet50 multi-label classifier.
 
 ---
 
-## 🌍 Why This Project Exists
+## Disease Detection
 
-Eye diseases like **Diabetic Retinopathy (DR)** often progress silently.
-Delayed detection leads to irreversible vision loss.
-
-**EYE-ASSISST** is built to:
-
-* 🧠 Enable **early AI-assisted screening**
-* 👨‍⚕️ Support clinicians with **data-driven insights**
-* 🔍 Prioritize **generalization over inflated metrics**
-* ⚖️ Follow **ethical & explainable AI principles**
-
-This is **not a demo CNN** — it is a **research-grade medical ML system**.
+| Disease | Model AUC | Status |
+|---|---|---|
+| Diabetic Retinopathy | 0.90 | ✅ Production-ready |
+| Glaucoma | 0.78+ (v5) | 🔄 Retraining |
+| AMD | 0.75+ (v5) | 🔄 Retraining |
+| Cataract | 0.74+ (v5) | 🔄 Retraining |
+| Hypertensive Retinopathy | 0.70+ (v5) | 🔄 Retraining |
+| Pathologic Myopia | 0.78+ (v5) | 🔄 Retraining |
 
 ---
 
-## 🚀 Project Roadmap & Status
-
-| Phase        | Description                        | Status               |
-| ------------ | ---------------------------------- | -------------------- |
-| **Phase 1A** | Data Engineering                   | ✅ Completed          |
-| **Phase 1B** | Medical Image Preprocessing        | ✅ Completed          |
-| **Phase 2A** | CNN Strategy & Clinical Design     | ✅ Completed          |
-| **Phase 2B** | CNN Training & External Validation | ✅ Completed & Frozen |
-| **Phase 3**  | Multi-Disease AI System            | 🟡 Planning          |
-
----
-
-## 🧠 Core Features
-
-### ✅ Implemented (Phase 2)
-
-* Binary DR screening (NORMAL vs DR)
-* CNN-based retinal image classification
-* External dataset validation (APTOS)
-* Clinically prioritized metrics
-* Strict data-leakage prevention
-* Reproducible ML pipeline
-
-### 🔜 Planned (Phase 3+)
-
-* Multi-disease classification
-* Explainability (Grad-CAM)
-* Doctor approval workflow
-* NLP symptom assistant
-* Real-time inference & deployment
-
----
-
-## 🗂️ Repository Structure (Phase 2)
+## Project Structure
 
 ```
-eye-assisst/
-├── src/
-│   ├── data/        # Frozen DataModule & splits
-│   ├── models/      # CNN backbone (ResNet-18)
-│   ├── training/    # Training & evaluation logic
-│   ├── metrics/     # Medical metrics (Sensitivity, AUC)
-│   └── utils/       # Reproducibility helpers
-├── notebooks/       # Phase results & analysis
-├── models/          # Checkpoints (Git LFS)
-├── requirements.txt
-├── README.md
-└── .gitignore
+EYE-ASSISST/
+├── backend/                    # FastAPI inference server
+│   └── main.py                 # API endpoints + model loading
+│
+├── AI Eye Screening UI/app/    # React clinical dashboard (existing)
+├── front1/app/                 # React v2 (3D landing, patient portal)
+│
+├── phase0_fundus_classifier/   # Binary fundus quality classifier
+├── phase1_pipelines/           # Data ingestion pipelines
+├── phase2_dr_severity/         # DR severity grading (5-class)
+├── phase3_multi_disease/       # Multi-disease classifier (6 classes)
+│   ├── build_unified_csv.py    # Dataset CSV builder (v5)
+│   ├── train.py                # Training script (ResNet50)
+│   ├── calibrate_thresholds.py # Per-class threshold calibration
+│   ├── download_datasets.py    # Kaggle dataset downloader
+│   └── data/                   # Generated CSVs (gitignored)
+│
+├── Dataset/                    # All training datasets (gitignored)
+│   ├── dr_unified_v2/          # 92,501 DR images
+│   ├── augmented_resized_V2/   # 143,669 augmented DR
+│   ├── ODIR/                   # 10,000 ODIR-5K images
+│   ├── AMD/                    # 3,988 AMDNet23 images
+│   ├── GLAUCOMA_DETECTION/     # 18,842 glaucoma images
+│   ├── eye_diseases_classification/ # 4,217 multi-class
+│   ├── Hypertension & Hypertensive Retinopathy Dataset/ # 1,424
+│   ├── Messidor-2/             # 1,744 DR images
+│   ├── Myopia images/          # 100,543 myopia images
+│   └── CATRACT/                # 1,202 cataract images
+│       Total: ~377,000 images
+│
+├── models/                     # Saved checkpoints
+├── docs/datasets/DATASETS.md   # Full dataset documentation
+├── requirements.txt            # Python dependencies
+└── START_APP.bat               # One-click startup
 ```
 
-🔒 **Medical datasets are intentionally excluded from GitHub**.
+---
+
+## Datasets
+
+See [`docs/datasets/DATASETS.md`](docs/datasets/DATASETS.md) for full details.
+
+**Total training data: ~377,000 fundus images across 11 datasets.**
 
 ---
 
-## 📊 Datasets Used
+## Quick Start
 
-### Primary Dataset
-
-* **EyePACS**
-  Large-scale retinal fundus dataset used for **training & validation**.
-
-### External Test Dataset
-
-* **APTOS**
-  Used **only for final evaluation** to measure real-world generalization.
-
-> No image from APTOS was ever seen during training or tuning.
-
----
-
-## 🧪 How to Run (Development)
-
+### 1. Install Dependencies
 ```bash
-# 1️⃣ Clone repository
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
-
-# 2️⃣ Create environment
-python -m venv venv
-source venv/bin/activate     # Linux / Mac
-venv\Scripts\activate        # Windows
-
-# 3️⃣ Install dependencies
 pip install -r requirements.txt
 ```
 
----
+### 2. Build Training CSVs (v5)
+```bash
+python phase3_multi_disease/build_unified_csv.py
+```
 
-# 🧠 Phase 2 — The Heart of This Project
+### 3. Train Multi-Disease Model
+```bash
+python phase3_multi_disease/train.py \
+    --train_csv phase3_multi_disease/data/train_unified_v5.csv \
+    --val_csv   phase3_multi_disease/data/val_unified_v5.csv \
+    --data_root . \
+    --epochs 50 \
+    --batch_size 32 \
+    --model resnet50 \
+    --image_size 224 \
+    --device cuda
+```
 
-## 🔒 Phase Freeze Guarantee
+### 4. Calibrate Thresholds
+```bash
+python phase3_multi_disease/calibrate_thresholds.py \
+    --checkpoint phase3_multi_disease/checkpoints/<run_id>/best_model.pt \
+    --val_csv phase3_multi_disease/data/val_unified_v5.csv \
+    --data_root .
+```
 
-Before Phase 2 began, **Phase 1 was permanently frozen**:
+### 5. Start Backend
+```bash
+cd backend
+python main.py
+```
 
-* ✅ Data ingestion finalized
-* ✅ Preprocessing finalized
-* ✅ Train / Val / Test splits finalized
-* ✅ Manifest CSV locked
-
-🚫 **No changes allowed** during Phase 2
-This ensures **zero data leakage** and **reproducible experiments**.
-
----
-
-## 🧠 Phase 2A — CNN Strategy & Clinical Design
-
-> *“Think like an ML engineer before writing code.”*
-
-Phase 2A focuses on **decision-making, not training**.
-
-### 🎯 Objective
-
-Design a **clinically meaningful and generalizable DR screening system**, not just a high-accuracy model.
-
-### 🧩 Key Decisions (Locked)
-
-#### 1️⃣ Binary vs Multi-Class Classification
-
-* **Chosen:** NORMAL vs DR
-* **Why:**
-
-  * Screening relevance
-  * Severity labels are noisy
-  * Better external generalization
-
----
-
-#### 2️⃣ Loss Functions for Medical AI
-
-Options evaluated:
-
-* Binary Cross Entropy
-* BCE with Class Weights ✅
-* Focal Loss
-
-**Clinical logic:**
-False negatives (missing DR) are more dangerous than false positives.
+### 6. Start Frontend
+```bash
+cd "AI Eye Screening UI/app"
+npm run dev
+```
 
 ---
 
-#### 3️⃣ Metrics Beyond Accuracy
+## API Endpoints
 
-Primary metric:
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Backend status + model info |
+| `POST` | `/api/analyze` | Analyze fundus image (returns all 6 disease flags) |
+| `GET` | `/api/scans` | List all previous scans |
+| `GET` | `/api/v1/scan/{id}` | Get full scan details with Grad-CAM |
 
-* ⭐ **Sensitivity (Recall for DR)**
-
-Supporting metrics:
-
-* Specificity
-* AUC-ROC
-* Precision–Recall trade-off
-
-Accuracy alone is misleading in medical datasets.
-
----
-
-#### 4️⃣ Class Imbalance Handling
-
-Strategies compared:
-
-* Class weighting ✅
-* Over/Under-sampling
-
-**Why no resampling at split time?**
-To preserve **real-world disease prevalence**.
-
----
-
-#### 5️⃣ Training Protocol: EyePACS → APTOS
-
-* Train + validate on EyePACS
-* Test only on APTOS
-
-This elevates the project from:
-
-> “I trained a CNN”
-> to
-> **“I evaluated real generalization.”**
+### Example Response
+```json
+{
+  "analysis_id": "SCAN-A1B2C3",
+  "dr_binary": { "is_dr": true, "confidence": 72.3 },
+  "dr_severity": { "grade": 2, "label": "Moderate", "color": "#F97316" },
+  "multi_disease": {
+    "dr":           { "detected": true,  "confidence": 72.3, "threshold": 0.60 },
+    "glaucoma":     { "detected": false, "confidence": 28.1, "threshold": 0.35 },
+    "amd":          { "detected": false, "confidence": 18.4, "threshold": 0.40 },
+    "cataract":     { "detected": false, "confidence": 12.0, "threshold": 0.55 },
+    "hypertensive": { "detected": false, "confidence": 9.2,  "threshold": 0.45 },
+    "myopic":       { "detected": false, "confidence": 22.1, "threshold": 0.50 }
+  },
+  "gradcam": { "heatmap_base64": "..." }
+}
+```
 
 ---
 
-## 🤖 AI-Augmented ML Workflow
+## Model Architecture
 
-Used responsibly:
+```
+Input (224×224 RGB)
+    ↓
+ResNet50 Backbone (ImageNet pretrained)
+    ↓
+Global Average Pooling
+    ↓
+Linear (2048 → 6)
+    ↓
+Sigmoid × 6  →  [DR, Glaucoma, AMD, Cataract, Hypertensive, Myopic]
+```
 
-* **ChatGPT** → Strategy & reasoning
-* **Perplexity AI** → Evidence validation
-* **Notion / Markdown** → Decision logs
-* **Cursor** → Implementation
-* **Weights & Biases** → Experiment tracking
-
-AI enhanced thinking — it never replaced fundamentals.
-
----
-
-## 🧠 Phase 2B — Implementation & Training
-
-### 🧩 Model Architecture
-
-* **CNN Backbone:** ResNet-18
-* ImageNet pretrained
-* Single backbone enforced for Phase 2
-
-### 🧩 Training Setup
-
-* Optimizer: AdamW
-* LR Scheduler
-* Early stopping on **validation sensitivity**
-* Best model saved by **clinical priority**, not accuracy
+**Training details:**
+- Loss: Binary Cross-Entropy with class-weighted pos_weight
+- Optimizer: Adam, LR 1e-4 with ReduceLROnPlateau
+- Augmentation: Random flip, rotation, color jitter, Gaussian blur
+- Threshold calibration: Per-class F1-optimal threshold search (0.1–0.9)
 
 ---
 
-## 📊 Phase 2 Results — External Validation (APTOS)
+## Tech Stack
 
-⭐ **This is the most important result of the project**
-
-| Metric                  | Value        |
-| ----------------------- | ------------ |
-| Accuracy                | ~95.9%       |
-| Sensitivity (DR Recall) | **~96.4%** ⭐ |
-| Specificity             | ~95.4%       |
-| AUC-ROC                 | ~0.988       |
-
-### 🧪 Confusion Matrix (APTOS)
-
-* True Positives: **348**
-* False Negatives: **13**
-* False Positives: **17**
-* True Negatives: **355**
+| Layer | Technology |
+|---|---|
+| AI Model | PyTorch 2.7, ResNet50, Grad-CAM |
+| Backend | FastAPI, Uvicorn, Python 3.10 |
+| Frontend (Clinical) | React 19, TypeScript, TailwindCSS, Framer Motion |
+| Frontend (3D) | React Three Fiber, Three.js, GSAP |
+| Data Processing | Pandas, NumPy, Pillow, OpenCV |
+| Evaluation | scikit-learn (AUC, F1, ROC) |
 
 ---
 
-## 🩺 Clinical Interpretation
+## Requirements
 
-* 🔥 Very low false-negative rate
-* ⚖️ Balanced performance across classes
-* 🌍 Strong generalization to unseen data
-
-The model learned **disease-relevant features**, not dataset shortcuts.
-
----
-
-## 📈 Why Training Curves Are Not Emphasized
-
-* External generalization > fitting dynamics
-* Early stopping occurred naturally
-* Final metrics provide stronger clinical evidence
-
-This aligns with **research-grade medical ML practice**.
-
----
-
-## 🔒 Phase 2 Closure Statement
-
-Phase 2 is **officially complete and frozen**.
-
-✔ External validation achieved
-✔ No test-set tuning
-✔ Clinically meaningful metrics
-✔ Clean experiment discipline
-
----
-
-### 🚀 Phase 3 — Multi-Disease, Multi-Head AI System (IN PROGRESS)
-
-Phase 3 upgrades the system from a **single-task model** to a **multi-task medical AI platform**.
-
-#### Phase 3 Goals
-- Multi-head architecture
-- Binary DR screening
-- DR severity grading
-- Multi-label disease detection
-- Explainability via Grad-CAM
-- Product-ready ML foundation
-
-#### Core Design Principles
-- Shared backbone, multiple task-specific heads
-- Disease independence (multi-label, not multi-class)
-- Sensitivity-first evaluation
-- Doctor-in-the-loop decision making
-- Explainability as support, not diagnosis
-
----
-
-Input Fundus Image
-│
-▼
-Shared CNN Backbone (ResNet-based)
-│
-┌──────┼────────┐
-│ │ │
-▼ ▼ ▼
-DR Binary DR Severity Multi-Label Diseases
-
-
-Each head:
-- Produces logits only
-- Has its own loss & metrics
-- Supports head-specific Grad-CAM
-
----
-
-## 🧪 Explainability
-
-- Grad-CAM is generated **per head**
-- Used only in **doctor/admin portals**
-- Not exposed to end users
-- Intended for interpretability, not lesion localization
-
----
-
-## 🧑‍⚕️ Intended Usage Flow (Future)
-
-- Fundus images captured using **specialized retinal cameras**
-- Uploaded by clinics / diagnostic centers
-- AI generates a **preliminary report**
-- Doctor reviews, edits, and approves
-- Prescriptions are created **only by doctors**
-
----
-
-## 📁 Repository Structure (Simplified)
-
-src/
-├── configs/ # YAML-based experiment configs
-├── data/ # Datasets & datamodules
-├── models/ # Backbone + multi-head models
-├── losses/ # Custom loss functions
-├── training/ # Phase 2 training (frozen)
-├── training_phase3/ # Phase 3 training pipelines
-├── evaluation_phase3/ # Phase 3 evaluation scripts
-├── explainability/ # Grad-CAM
-├── metrics/ # Metric utilities
-└── utils/ # Logging, seeds, checkpoints
-
-
----
-
-## 🧪 Current Status
-
-- Phase 1: ✅ Closed
-- Phase 2: ✅ Completed & validated
-- Phase 3 (M1): ✅ Codebase refactor completed
-- Phase 3 (M2): 🔄 DR binary + severity training (next)
-
----
-## 🔮 Future Roadmap
-
-Stage-3 joint optimization
-
-- ODIR multi-label expansion
-- FastAPI inference API
-- Streamlit clinical interface
-- Model compression for edge deployment
-- Grad-CAM report export for doctors
-
-## 📌 License & Ethics
-
-This project follows:
-- Responsible AI principles
-- No automated diagnosis claims
-- No treatment recommendations by AI
-- Human-in-the-loop enforcement
-
-
-## 🏁 Final Note
-
-> In medical AI,
-> **honest generalization beats perfect numbers.**
-
-This project prioritizes **trustworthy ML** over inflated benchmarks.
-
----
-
-## 👤 Author
-
-**Siddhanth Sharma**
-B.Tech — Machine Learning & AI
-Focused on **applied medical AI**, **ML engineering**, and **real-world systems**
-
----
-
+- Python 3.10+
+- CUDA GPU (RTX 3060 or better recommended for training)
+- Node.js 18+ (for frontend)
+- 50GB+ disk space for datasets
