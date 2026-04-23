@@ -1,21 +1,21 @@
 {
-  "SCAN-06D54F02": {
-    "scan_id": "SCAN-06D54F02",
-    "patient_id": "P-2026-003",
+  "SCAN-EDB076A2": {
+    "scan_id": "SCAN-EDB076A2",
+    "patient_id": "p-980",
     "laterality": "OD",
-    "timestamp": "2026-04-11T07:23:39.792253",
+    "timestamp": "2026-04-21T17:41:47.202266",
     "prediction": {
       "binary_result": "Normal",
-      "confidence": 99.88,
+      "confidence": 99.63,
       "severity_level": 0,
       "severity_label": "Normal",
       "severity_color": "#10B981",
       "severity_probs": [
-        0.9987500905990601,
-        0.00010608910815790296,
-        0.0004525467229541391,
-        0.00047371609252877533,
-        0.00021752422617282718
+        0.9962790608406067,
+        0.0008294351282529533,
+        0.0011689852690324187,
+        0.0009696760098449886,
+        0.0007528769201599061
       ],
       "multi_disease": {
         "amd": {
@@ -31,4 +31,7 @@
           "confidence": 0.0
         }
       },
-      "features": 
+      "features": []
+    }
+  }
+}
