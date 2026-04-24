@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import CursorEffect from '@/components/CursorEffect';
 import { 
   Eye, 
   Upload, 
@@ -199,40 +201,61 @@ function Header({ userRole, onLogout }: { userRole: UserRole; onLogout: () => vo
   );
 }
 
-// Login Page
+// Login Page — 4-role: Patient, Doctor, Technician, Admin
 function LoginPage({ onLogin }: { onLogin: (role: UserRole) => void }) {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+  const navigate = useNavigate();
+  // step 1 = role card selection, step 2 = sign-in / sign-up for that role
+  const [step, setStep] = useState<1 | 2>(1);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (!selectedRole) {
-      toast.error('Please select a role');
-      return;
-    }
+  const roles = [
+    { id: 'patient',    label: 'Patient',        icon: User,        description: 'Book appointments and view your scan history', color: 'text-emerald-400' },
+    { id: 'doctor',     label: 'Doctor',         icon: Stethoscope, description: 'Review AI analyses and approve reports',         color: 'text-blue-400' },
+    { id: 'technician', label: 'Technician',      icon: Microscope,  description: 'Upload images and run AI screening',            color: 'text-amber-400' },
+    { id: 'admin',      label: 'Administrator',  icon: Shield,      description: 'Monitor system metrics and performance',        color: 'text-purple-400' },
+  ];
+
+  const handleRoleSelect = (roleId: string) => {
+    setSelectedRole(roleId);
+    setStep(2);
+  };
+
+  const handleAuth = () => {
+    if (!email || !password) { toast.error('Please fill in all fields'); return; }
+    if (authMode === 'signup' && !name) { toast.error('Please enter your name'); return; }
     setIsLoading(true);
     setTimeout(() => {
-      onLogin(selectedRole);
+      // Save session to localStorage
+      const session = { role: selectedRole, email, name: name || email.split('@')[0], ts: Date.now() };
+      localStorage.setItem('eye_session', JSON.stringify(session));
+      if (selectedRole === 'patient') {
+        toast.success(`Welcome${name ? ', ' + name : ''}!`);
+        navigate('/patient-portal');
+      } else {
+        onLogin(selectedRole as UserRole);
+        toast.success(`Logged in as ${selectedRole}`);
+      }
       setIsLoading(false);
-      toast.success(`Logged in as ${selectedRole}`);
     }, 800);
   };
 
-  const roles = [
-    { id: 'doctor', label: 'Doctor', icon: Stethoscope, description: 'Review AI analyses and approve reports' },
-    { id: 'technician', label: 'Technician', icon: Microscope, description: 'Upload images and run AI screening' },
-    { id: 'admin', label: 'Administrator', icon: Shield, description: 'Monitor system metrics and performance' },
-  ];
-
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div 
+      <div className="noise-overlay" />
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-lg"
       >
+        {/* Header */}
         <div className="text-center mb-8">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
@@ -244,63 +267,99 @@ function LoginPage({ onLogin }: { onLogin: (role: UserRole) => void }) {
           <p className="text-muted-foreground">AI-Powered Eye Disease Screening</p>
         </div>
 
-        <Card className="medical-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Select Your Role</CardTitle>
-            <CardDescription>Choose your role to access the appropriate dashboard</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RadioGroup value={selectedRole || ''} onValueChange={(v) => setSelectedRole(v as UserRole)}>
-              {roles.map((role) => (
-                <div key={role.id}>
-                  <Label
-                    htmlFor={role.id}
-                    className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-all ${
-                      selectedRole === role.id 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                    }`}
-                  >
-                    <RadioGroupItem value={role.id} id={role.id} className="mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <role.icon className="w-4 h-4 text-primary" />
-                        <span className="font-medium">{role.label}</span>
+        <AnimatePresence mode="wait">
+          {/* Step 1 — Role selection */}
+          {step === 1 && (
+            <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+              <Card className="medical-panel">
+                <CardHeader>
+                  <CardTitle className="text-lg">Select Your Role</CardTitle>
+                  <CardDescription>Choose how you want to access the platform</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {roles.map((role) => (
+                    <button
+                      key={role.id}
+                      onClick={() => handleRoleSelect(role.id)}
+                      className="w-full flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
+                        <role.icon className={`w-5 h-5 ${role.color}`} />
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
-                    </div>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+                      <div>
+                        <p className="font-medium text-foreground">{role.label}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">{role.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-            <Button 
-              className="w-full btn-medical" 
-              onClick={handleLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Accessing...
-                </>
-              ) : (
-                <>
-                  <User className="w-4 h-4 mr-2" />
-                  Access Dashboard
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+          {/* Step 2 — Sign in / Sign up */}
+          {step === 2 && (
+            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <Card className="medical-panel">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-1">
+                    <button onClick={() => setStep(1)} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    </button>
+                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+                      {(() => { const r = roles.find(r => r.id === selectedRole); return r ? <r.icon className={`w-4 h-4 ${r.color}`} /> : null; })()}
+                    </div>
+                    <CardTitle className="text-lg capitalize">{selectedRole} Access</CardTitle>
+                  </div>
+                  {/* Sign in / Sign up toggle */}
+                  <div className="flex rounded-lg border border-border overflow-hidden mt-2">
+                    {(['signin', 'signup'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setAuthMode(mode)}
+                        className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                          authMode === mode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+                      </button>
+                    ))}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {authMode === 'signup' && (
+                    <div className="space-y-1">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input id="name" placeholder="Dr. Priya Sharma" value={name} onChange={e => setName(e.target.value)} />
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" type="email" placeholder="you@hospital.com" value={email} onChange={e => setEmail(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAuth()} />
+                  </div>
+                  <Button className="w-full btn-medical" onClick={handleAuth} disabled={isLoading}>
+                    {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Please wait...</> :
+                      authMode === 'signin' ? <><User className="w-4 h-4 mr-2" />Sign In</> : <><User className="w-4 h-4 mr-2" />Create Account</>}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Secure medical imaging platform • HIPAA Compliant
+          Secure medical imaging platform · HIPAA Compliant
         </p>
       </motion.div>
     </div>
   );
 }
+
 
 // Technician Dashboard - Image Upload & Analysis
 function TechnicianDashboard() {
@@ -356,19 +415,29 @@ function TechnicianDashboard() {
   };
 
   const handleFile = (file: File) => {
+    // Validate it is a recognised image type
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/bmp', 'image/tiff'];
+    if (!allowed.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a fundus image (JPEG, PNG, WEBP, BMP, or TIFF).', { duration: 5000 });
+      return;
+    }
+    // Warn if file is suspiciously small (likely not a real fundus image)
+    if (file.size < 10 * 1024) {
+      toast.warning('The uploaded file seems very small. Please make sure it is a valid fundus photograph.');
+    }
     // Clear previous analysis when new file is uploaded
     setAnalysisResult(null);
-    setUploadedFile(file);  // Keep raw file for API submission
+    setUploadedFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setUploadedImage(e.target?.result as string);
-      toast.success('Image uploaded successfully');
+      toast.success('Image uploaded successfully. Fill in patient details and click Analyze.');
     };
     reader.readAsDataURL(file);
   };
 
   const handleAnalyze = async () => {
-    console.log('🔍 handleAnalyze called');
+    console.log('≡ƒöì handleAnalyze called');
     
     if (!uploadedFile) {
       toast.error('Please upload an image first');
@@ -379,18 +448,18 @@ function TechnicianDashboard() {
       return;
     }
     if (isAnalyzing) {
-      console.log('⏳ Already analyzing, skipping...');
+      console.log('ΓÅ│ Already analyzing, skipping...');
       return; // Prevent double-clicks
     }
 
-    console.log('📤 Starting analysis...');
+    console.log('≡ƒôñ Starting analysis...');
     console.log('  Patient ID:', patientId);
     console.log('  Laterality:', laterality);
     console.log('  File:', uploadedFile.name);
     
     setIsAnalyzing(true);
     setAnalysisResult(null); // Clear previous analysis
-    console.log('🗑️ Cleared previous results');
+    console.log('≡ƒùæ∩╕Å Cleared previous results');
     
     try {
       // Send image to backend API
@@ -399,21 +468,21 @@ function TechnicianDashboard() {
       formData.append('patient_id', patientId);
       formData.append('laterality', laterality);
       
-      console.log('📡 Sending to backend:', API_BASE_URL);
+      console.log('≡ƒôí Sending to backend:', API_BASE_URL);
 
       const response = await fetch(
         `${API_BASE_URL}/api/analyze?include_gradcam=true`,
         { method: 'POST', body: formData }
       );
       
-      console.log('📥 Response status:', response.status);
+      console.log('≡ƒôÑ Response status:', response.status);
 
       if (!response.ok) {
         // Properly handle error response
-        console.error('❌ Backend rejected image:', response.status);
+        console.error('Γ¥î Backend rejected image:', response.status);
         const errData = await response.json().catch(() => ({ detail: 'Server returned error' }));
         const errorMessage = errData.detail || `Server error: ${response.status}`;
-        console.error('❌ Error message:', errorMessage);
+        console.error('Γ¥î Error message:', errorMessage);
         
         // Show clear error toast
         toast.error(errorMessage, {
@@ -430,9 +499,9 @@ function TechnicianDashboard() {
         return; // Stop here on error - DO NOT show results
       }
 
-      console.log('✅ Backend accepted image, processing response...');
+      console.log('Γ£à Backend accepted image, processing response...');
       const data = await response.json();
-      console.log('✅ Response data:', data);
+      console.log('Γ£à Response data:', data);
 
       // Map backend response to frontend AnalysisResult interface
       const severityColorMap: Record<number, string> = {
@@ -462,16 +531,16 @@ function TechnicianDashboard() {
       };
 
       setAnalysisResult(result);
-      console.log('✅ Analysis complete, results set');
+      console.log('Γ£à Analysis complete, results set');
       toast.success('Analysis complete');
     } catch (err: any) {
-      console.error('💥 Exception caught:', err);
+      console.error('≡ƒÆÑ Exception caught:', err);
       console.error('Analysis failed:', err);
       toast.error(`Analysis failed: ${err.message}`);
       setAnalysisResult(null);  // Ensure no stale results
     } finally {
       setIsAnalyzing(false);
-      console.log('🏁 handleAnalyze finished');
+      console.log('≡ƒÅü handleAnalyze finished');
     }
   };
 
@@ -628,7 +697,7 @@ function TechnicianDashboard() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(scan.timestamp).toLocaleDateString()} • {scan.laterality}
+                      {new Date(scan.timestamp).toLocaleDateString()} ΓÇó {scan.laterality}
                     </p>
                   </div>
                 ))}
@@ -1253,7 +1322,7 @@ function PatientHistoryDashboard() {
                     <Badge variant="secondary" className="text-xs">{patient.scans} scans</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {patient.id} • {patient.age} years
+                    {patient.id} ΓÇó {patient.age} years
                   </p>
                 </div>
               ))}
@@ -1269,7 +1338,7 @@ function PatientHistoryDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">{patients.find(p => p.id === selectedPatient)?.name}</h2>
-              <p className="text-muted-foreground">{selectedPatient} • {patients.find(p => p.id === selectedPatient)?.age} years</p>
+              <p className="text-muted-foreground">{selectedPatient} ΓÇó {patients.find(p => p.id === selectedPatient)?.age} years</p>
             </div>
             <div className="flex items-center gap-2">
               <Button 
@@ -1663,7 +1732,7 @@ function AdminAnalyticsPanel() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">GPU Status</p>
-                  <p className="text-xs text-muted-foreground">CUDA Available • 8GB VRAM</p>
+                  <p className="text-xs text-muted-foreground">CUDA Available ΓÇó 8GB VRAM</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
@@ -1672,7 +1741,7 @@ function AdminAnalyticsPanel() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">API Latency</p>
-                  <p className="text-xs text-muted-foreground">Avg: 245ms • P95: 380ms</p>
+                  <p className="text-xs text-muted-foreground">Avg: 245ms ΓÇó P95: 380ms</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
@@ -1681,7 +1750,7 @@ function AdminAnalyticsPanel() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">Security</p>
-                  <p className="text-xs text-muted-foreground">SSL Active • HIPAA Compliant</p>
+                  <p className="text-xs text-muted-foreground">SSL Active ΓÇó HIPAA Compliant</p>
                 </div>
               </div>
             </div>
@@ -1693,16 +1762,15 @@ function AdminAnalyticsPanel() {
 }
 
 // ============================================================================
-// MAIN APP
+// DASHBOARD SHELL (Doctor / Technician / Admin)
 // ============================================================================
 
-function App() {
+function DashboardShell() {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [activeTab, setActiveTab] = useState('upload');
 
   const handleLogin = (role: UserRole) => {
     setUserRole(role);
-    // Set default tab based on role
     if (role === 'doctor') setActiveTab('review');
     else if (role === 'technician') setActiveTab('upload');
     else if (role === 'admin') setActiveTab('analytics');
@@ -1718,32 +1786,28 @@ function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  // Navigation items based on role
-  const navItems: Record<string, { id: string; label: string; icon: React.ElementType }[]> = {
+  interface NavItem { id: string; label: string; icon: (props: { className?: string }) => React.ReactElement; }
+  const navItems: Record<string, NavItem[]> = {
     doctor: [
-      { id: 'review', label: 'Review Portal', icon: Stethoscope },
-      { id: 'history', label: 'Patient History', icon: History },
+      { id: 'review', label: 'Review Portal', icon: (p) => <Stethoscope {...p} /> },
+      { id: 'history', label: 'Patient History', icon: (p) => <History {...p} /> },
     ],
     technician: [
-      { id: 'upload', label: 'Image Upload', icon: Upload },
-      { id: 'history', label: 'Patient History', icon: History },
+      { id: 'upload', label: 'Image Upload', icon: (p) => <Upload {...p} /> },
+      { id: 'history', label: 'Patient History', icon: (p) => <History {...p} /> },
     ],
     admin: [
-      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-      { id: 'history', label: 'Patient History', icon: History },
+      { id: 'analytics', label: 'Analytics', icon: (p) => <BarChart3 {...p} /> },
+      { id: 'history', label: 'Patient History', icon: (p) => <History {...p} /> },
     ],
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Noise Overlay */}
       <div className="noise-overlay" />
-      
       <Header userRole={userRole} onLogout={handleLogout} />
-      
-      {/* Navigation Sidebar */}
       <div className="flex h-[calc(100vh-56px)]">
-        <motion.aside 
+        <motion.aside
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.4 }}
@@ -1760,12 +1824,10 @@ function App() {
               }`}
               title={item.label}
             >
-              <item.icon className="w-5 h-5" />
+              {item.icon({ className: "w-5 h-5" })}
             </button>
           ))}
         </motion.aside>
-
-        {/* Main Content Area */}
         <main className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
@@ -1785,6 +1847,53 @@ function App() {
         </main>
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// MAIN APP — React Router
+// ============================================================================
+
+import LandingPage      from './pages/LandingPage';
+import PatientPortal   from './pages/PatientPortal';
+import AboutPage       from './pages/AboutPage';
+import BlogPage        from './pages/BlogPage';
+import CareersPage     from './pages/CareersPage';
+import CaseStudiesPage from './pages/CaseStudiesPage';
+import ContactPage     from './pages/ContactPage';
+import DocsPage        from './pages/DocsPage';
+import PrivacyPage     from './pages/PrivacyPage';
+import ResearchPage    from './pages/ResearchPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <CursorEffect />
+      <Routes>
+        {/* Public landing page */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Patient portal */}
+        <Route path="/patient-portal" element={<PatientPortal />} />
+
+        {/* Doctor / Technician / Admin login & dashboards */}
+        <Route path="/login" element={<DashboardShell />} />
+        <Route path="/dashboard" element={<DashboardShell />} />
+
+        {/* Info pages */}
+        <Route path="/about"        element={<AboutPage />} />
+        <Route path="/blog"         element={<BlogPage />} />
+        <Route path="/careers"      element={<CareersPage />} />
+        <Route path="/case-studies" element={<CaseStudiesPage />} />
+        <Route path="/contact"      element={<ContactPage />} />
+        <Route path="/docs"         element={<DocsPage />} />
+        <Route path="/privacy"      element={<PrivacyPage />} />
+        <Route path="/research"     element={<ResearchPage />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
