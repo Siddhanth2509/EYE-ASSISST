@@ -25,7 +25,7 @@ scikit-learn>=1.4.0
 
 # ── Image Processing ───────────────────────────────────
 Pillow>=10.3.0
-opencv-python>=4.9.0
+opencv-python-headless>=4.9.0
 
 # ── Explainability (Grad-CAM) ─────────────────────────
 grad-cam>=1.5.0
