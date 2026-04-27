@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 # Add project root to path for imports
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
 # Import real model inference
 from src.models.multi_task_models import MultiTaskModel
@@ -194,7 +195,7 @@ class RealDRModel:
     def __init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_loaded = False
-        self.input_size = (256, 256)  # Match training config
+        self.input_size = (224, 224)  # Match training config (default ResNet size)
         self.model = None
         
         # Severity labels and colors
@@ -215,7 +216,7 @@ class RealDRModel:
     def _load_model(self):
         """Load the trained severity model."""
         # Path to best trained model (QWK=0.82)
-        model_path = PROJECT_ROOT / "phase2_dr_severity" / "checkpoints" / "severity_qwk85_20260402_202743" / "best_model.pt"
+        model_path = Path(__file__).parent / "models" / "severity_qwk_best.pt"
         
         if not model_path.exists():
             raise FileNotFoundError(
@@ -360,16 +361,15 @@ class MultiDiseaseDetector:
         self._load()
 
     def _load(self):
-        ckpt_path = PROJECT_ROOT / 'phase3_multi_disease' / 'checkpoints' \
-                    / 'multidisease_resnet50_20260409_233715' / 'best_model.pt'
-        cfg_path  = ckpt_path.parent / 'threshold_config.json'
+        model_path = Path(__file__).parent / 'models' / 'multidisease_v1.pt'
+        cfg_path  = model_path.parent / 'threshold_config.json'
 
-        if not ckpt_path.exists():
-            logger.warning(f"Phase 3 model not found at {ckpt_path} — multi-disease disabled")
+        if not model_path.exists():
+            logger.warning(f"Phase 3 model not found at {model_path} — multi-disease disabled")
             return
         try:
             self.model = _MultiDiseaseNet().to(self.device)
-            ckpt = torch.load(ckpt_path, map_location=self.device, weights_only=False)
+            ckpt = torch.load(model_path, map_location=self.device, weights_only=False)
             self.model.load_state_dict(ckpt['model_state_dict'])
             self.model.eval()
             self.loaded = True
@@ -419,7 +419,7 @@ multi_disease_detector = MultiDiseaseDetector()
 print("\n" + "="*70)
 print("INITIALIZING FUNDUS CLASSIFIER")
 print("="*70)
-fundus_model_path = PROJECT_ROOT / "phase0_fundus_classifier" / "models" / "fundus_classifier" / "best_fundus_classifier.pt"
+fundus_model_path = Path(__file__).parent / "models" / "fundus_best.pt"
 initialize_fundus_classifier(
     checkpoint_path=fundus_model_path,
     threshold=0.9  # Strict threshold for medical validation
@@ -596,6 +596,10 @@ async def analyze_image(
         heatmap_img = base64_to_image(heatmap_base64)
         save_image_to_disk(heatmap_img, heat_filename)
 
+        # Remove tensor features so it can be serialized
+        if "features" in prediction:
+            del prediction["features"]
+
         # Store scan data
         scan_data = {
             "scan_id": scan_id,
@@ -707,6 +711,9 @@ async def analyze_image_compat(
             heat_filename = f"{analysis_id}_heatmap.png"
             heatmap_img = base64_to_image(heatmap_base64)
             save_image_to_disk(heatmap_img, heat_filename)
+
+        if "features" in prediction:
+            del prediction["features"]
 
         # Store scan data with patient info
         scan_data = {

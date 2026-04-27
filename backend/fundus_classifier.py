@@ -177,6 +177,6 @@ def get_fundus_classifier():
     if fundus_classifier is None:
         # Auto-initialize with default path (use absolute path)
         BASE_DIR = Path(__file__).resolve().parent.parent
-        default_path = BASE_DIR / "phase0_fundus_classifier" / "models" / "fundus_classifier" / "best_fundus_classifier.pt"
+        default_path = Path(__file__).resolve().parent / "models" / "fundus_best.pt"
         initialize_fundus_classifier(default_path, threshold=0.9)
     return fundus_classifier

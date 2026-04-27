@@ -243,10 +243,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Cursor
-#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
-#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
-#  refer to https://docs.cursor.com/context/ignore-files
+
 .cursorignore
 .cursorindexingignore
 
@@ -277,13 +274,12 @@ Data/cleaned/
 !Data/raw/.gitkeep
 !Data/cleaned/.gitkeep
 
-#<<<<<<< HEAD
-#models/**/*.pt
-#models/**/*.onnx
-#models/**/*.pth
-=======
-
 Data/
+Dataset/
 *.zip
-echo Dataset/ >> .gitignoreDataset/ 
-node_modules/ 
+node_modules/
+
+# Ensure model weights ARE uploaded
+!backend/models/*.pt
+!backend/models/*.pth
+!backend/models/*.ckpt
