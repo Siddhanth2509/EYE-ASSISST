@@ -1,0 +1,940 @@
+[
+  {
+    "id": "TC001",
+    "title": "Block access to dashboard when not authenticated",
+    "description": "Verifies that an unauthenticated visitor cannot access the dashboard route and is redirected to authentication.",
+    "category": "Authentication (Role-based Login & Signup)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page or shown an authentication prompt"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Log in as Patient and see patient dashboard",
+    "description": "Verifies that a user can select the Patient role, log in, and see the Patient dashboard render.",
+    "category": "Authentication (Role-based Login & Signup)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard with the Patient portal visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Persist logged-in session across refresh",
+    "description": "Verifies that an authenticated session persists client-side so a refresh keeps the user on the correct role dashboard.",
+    "category": "Authentication (Role-based Login & Signup)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Press F5"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user remains on the dashboard with the Patient portal visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Doctor can log in and access the dashboard",
+    "description": "Verifies a doctor can select the Doctor role, log in, and land on the dashboard with doctor portal content visible.",
+    "category": "Doctor Review Portal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Doctor role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify doctor-specific dashboard content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Technician can log in and access the dashboard",
+    "description": "Verifies a technician can select the Technician role, log in, and land on the dashboard with technician portal content visible.",
+    "category": "Technician Upload & Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Technician role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify technician-specific dashboard content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Admin can log in and access the dashboard",
+    "description": "Verifies an admin can select the Admin role, log in, and land on the dashboard with admin portal navigation visible.",
+    "category": "Admin Analytics & User Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Admin role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify admin-specific dashboard content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Log in as Doctor and see doctor dashboard",
+    "description": "Verifies that a user can select the Doctor role, log in, and see the Doctor dashboard render.",
+    "category": "Authentication (Role-based Login & Signup)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Doctor role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard with the Doctor portal visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Sign up as a new user and land on the correct role dashboard",
+    "description": "Verifies that a new user can sign up after selecting a role and is routed to the dashboard for that role.",
+    "category": "Authentication (Role-based Login & Signup)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the sign-up form"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid name into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid phone number into the phone field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Fill the same password into the confirm password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-up form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard with the Patient portal visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Technician can submit a scan for AI analysis and view results",
+    "description": "Verifies a technician can enter patient metadata, upload a valid fundus image, submit for analysis, and see AI results including probabilities, severity, confidence, original image, and heatmap.",
+    "category": "Technician Upload & Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Technician role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the technician upload workflow from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid patient metadata into the required fields"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid fundus image file in the upload control"
+      },
+      {
+        "type": "action",
+        "description": "Submit the scan for analysis"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify AI analysis results are displayed including severity, confidence, and per-disease probabilities"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the original image and an explainability heatmap are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Doctor can review a pending scan with overlay toggle and submit a decision",
+    "description": "Verifies a doctor can open a pending scan, view original and heatmap, toggle vessel overlay, record a decision with notes, submit, and see the scan removed from the pending list.",
+    "category": "Doctor Review Portal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Doctor role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Select a pending scan from the pending list"
+      },
+      {
+        "type": "action",
+        "description": "Toggle the vessel overlay control"
+      },
+      {
+        "type": "action",
+        "description": "Choose a review decision action"
+      },
+      {
+        "type": "action",
+        "description": "Fill clinical notes into the notes field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the reviewed scan is removed from the pending list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a review submission confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Doctor can modify severity and notes when choosing Modify",
+    "description": "Verifies choosing Modify allows changing severity and entering notes, and submitting records the updated assessment on the dashboard.",
+    "category": "Doctor Review Portal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Doctor role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Select a pending scan from the pending list"
+      },
+      {
+        "type": "action",
+        "description": "Choose the Modify review action"
+      },
+      {
+        "type": "action",
+        "description": "Select a different severity value"
+      },
+      {
+        "type": "action",
+        "description": "Fill clinical notes into the notes field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scan assessment view reflects the updated decision and severity"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scan is no longer shown as pending"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Navigate from landing page to role-based login",
+    "description": "Verifies that a visitor can review the landing content and start onboarding by navigating from the landing page to the login page.",
+    "category": "Public Landing Page",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the section explaining how the AI workflow works"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the section describing disease coverage and metrics"
+      },
+      {
+        "type": "action",
+        "description": "Click the get started call to action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the login page"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Admin can add a user and see it in the user list",
+    "description": "Verifies an admin can open User Management, add a new user with required fields, and see the new user appear in the list.",
+    "category": "Admin Analytics & User Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Admin role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the user management section from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the add user form"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new name into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a phone number into the phone field"
+      },
+      {
+        "type": "action",
+        "description": "Select a role for the new user"
+      },
+      {
+        "type": "action",
+        "description": "Submit the add user form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new user appears in the user list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user list count increases or reflects the newly added entry"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "View scan details from scan history",
+    "description": "Verifies that a patient can open a scan from the scan history list and view the AI summary and doctor notes.",
+    "category": "Patient Portal (Scan History, Reports, Appointments)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Select a scan from the scan history list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify scan details show an AI diagnosis summary and doctor notes"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Book an appointment and see confirmation",
+    "description": "Verifies that a patient can book an appointment by selecting a specialty and time slot and then sees a booking confirmation in the portal.",
+    "category": "Patient Portal (Scan History, Reports, Appointments)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the appointment booking workflow from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select a specialty"
+      },
+      {
+        "type": "action",
+        "description": "Select an available time slot"
+      },
+      {
+        "type": "action",
+        "description": "Complete the booking flow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a booking confirmation is visible in the Patient portal"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Download PDF report from scan details",
+    "description": "Verifies that a patient can initiate a PDF report download from a scan detail view.",
+    "category": "Patient Portal (Scan History, Reports, Appointments)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Select a scan from the scan history list"
+      },
+      {
+        "type": "action",
+        "description": "Initiate the report download from the scan details view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a PDF report download is initiated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Admin can view analytics tiles and charts",
+    "description": "Verifies the admin analytics view displays key metric tiles and renders volume/performance visualizations.",
+    "category": "Admin Analytics & User Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Admin role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the admin analytics section from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify key metric tiles are displayed for platform analytics"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify screening volume and model performance charts are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Admin can filter users by role and toggle active state",
+    "description": "Verifies role filtering narrows the user list and toggling a user's active status updates the list state accordingly.",
+    "category": "Admin Analytics & User Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Admin role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the user management section from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select a role in the role filter control"
+      },
+      {
+        "type": "action",
+        "description": "Toggle the active state for one user in the filtered list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user list reflects the selected role filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the toggled user's active status is updated in the list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Reject profile update when passwords do not match",
+    "description": "Verifies that saving profile changes with mismatched password and confirmation is blocked and shows a validation error.",
+    "category": "Patient Portal (Scan History, Reports, Appointments)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile edit view from the Patient dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a different password into the confirm password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a password confirmation validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC020",
+    "title": "Technician sees client-side validation error for unsupported file type",
+    "description": "Verifies selecting an unsupported image MIME type is rejected with a visible validation error and the scan cannot be submitted.",
+    "category": "Technician Upload & Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Technician role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the technician upload workflow from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid patient metadata into the required fields"
+      },
+      {
+        "type": "action",
+        "description": "Select a file with an unsupported MIME type in the upload control"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a file validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scan cannot be submitted for analysis"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC021",
+    "title": "Show email format validation on login",
+    "description": "Verifies that entering an invalid email format on the login form shows an email validation error and prevents login.",
+    "category": "Authentication (Role-based Login & Signup)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Patient role"
+      },
+      {
+        "type": "action",
+        "description": "Fill invalid-email-format into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill any-password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an email validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC022",
+    "title": "Technician is prevented from submitting when required metadata is missing",
+    "description": "Verifies the upload workflow blocks submission and shows validation when required patient metadata is not provided.",
+    "category": "Technician Upload & Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Select the Technician role"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the technician upload workflow from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid fundus image file in the upload control"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the scan for analysis without completing required metadata"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify required-field validation errors are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scan is not submitted for analysis"
+      }
+    ],
+    "priority": "Low"
+  }
+]

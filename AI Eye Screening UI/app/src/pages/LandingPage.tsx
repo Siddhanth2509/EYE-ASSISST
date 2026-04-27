@@ -26,7 +26,8 @@ import {
 } from 'lucide-react';
 import PaymentGateway from '@/components/PaymentGateway';
 import { Button } from '@/components/ui/button';
-import EyeModel3D from '@/components/three/EyeModel3D';
+import { Suspense, lazy } from 'react';
+const EyeModel3D = lazy(() => import('@/components/three/EyeModel3D'));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -592,9 +593,12 @@ export default function LandingPage() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="order-1 lg:order-2 h-[400px] lg:h-[600px]"
+              className="order-1 lg:order-2 h-[400px] lg:h-[600px] rounded-3xl overflow-hidden"
+              style={{ background: 'radial-gradient(ellipse at center, #0d1a2e 0%, #0B0F19 100%)' }}
             >
-              <EyeModel3D />
+              <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground"><Activity className="w-8 h-8 animate-pulse" /></div>}>
+                <EyeModel3D />
+              </Suspense>
             </motion.div>
           </div>
         </div>
@@ -828,7 +832,7 @@ export default function LandingPage() {
                 size="lg"
                 variant="outline"
                 className="text-lg px-10 py-6"
-                onClick={() => alert('Demo scheduling coming soon!')}
+                onClick={() => navigate('/demo')}
               >
                 <BarChart3 className="w-5 h-5 mr-2" />
                 View Demo

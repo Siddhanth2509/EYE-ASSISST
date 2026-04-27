@@ -616,7 +616,7 @@ export default function EyeModel3D() {
 
           <OrbitControls
             enablePan={false}
-            enableZoom={true}
+            enableZoom={false}
             minDistance={2}
             maxDistance={6}
             autoRotate={false}

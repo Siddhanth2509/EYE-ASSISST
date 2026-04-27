@@ -2,13 +2,14 @@
   "model_backbone": "resnet50",
   "checkpoint_epoch": 21,
   "thresholds": {
-    "dr": 0.6,
-    "glaucoma": 0.35,
-    "amd": 0.15,
-    "cataract": 0.8,
-    "hypertensive": 0.25,
-    "myopic": 0.6
+    "dr": 0.60,
+    "glaucoma": 0.65,
+    "amd": 0.65,
+    "cataract": 0.80,
+    "hypertensive": 0.65,
+    "myopic": 0.60
   },
   "macro_f1_at_optimal_threshold": 0.2975,
-  "macro_f1_at_0_5_threshold": 0.2741
+  "macro_f1_at_0_5_threshold": 0.2741,
+  "note": "Thresholds raised for glaucoma/amd/hypertensive because model baseline output is ~0.50 on all images"
 }

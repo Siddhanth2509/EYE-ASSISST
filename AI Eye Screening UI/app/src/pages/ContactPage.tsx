@@ -33,9 +33,9 @@ export default function ContactPage() {
           {/* Contact info */}
           <motion.div initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }} className="space-y-6">
             {[
-              { icon:Mail,    label:'Email',    value:'hello@eyeassist.ai' },
-              { icon:Phone,   label:'Phone',    value:'+91 98765 43210' },
-              { icon:MapPin,  label:'Address',  value:'IIT Bombay, Powai, Mumbai - 400076' },
+              { icon:Mail,    label:'Email',    value:'kuldeepgoswami636@gmail.com' },
+              { icon:Phone,   label:'Phone',    value:'+91 7078860629' },
+              { icon:MapPin,  label:'Address',  value:'5 Km Stone, Delhi-Meerut Road, Opposite Jain Tube Co. Ltd., Ghaziabad, Uttar Pradesh 201001, India' },
             ].map(({ icon:Icon, label, value }) => (
               <div key={label} className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">

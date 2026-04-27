@@ -343,8 +343,8 @@ class MultiDiseaseDetector:
                      'Cataract', 'Hypertensive Retinopathy', 'Myopic Degeneration']
     # Defaults from calibrate_thresholds.py; overridden by threshold_config.json
     DEFAULT_THRESHOLDS = {
-        'dr': 0.60, 'glaucoma': 0.35, 'amd': 0.15,
-        'cataract': 0.80, 'hypertensive': 0.25, 'myopic': 0.60
+        'dr': 0.60, 'glaucoma': 0.65, 'amd': 0.65,
+        'cataract': 0.80, 'hypertensive': 0.65, 'myopic': 0.60
     }
 
     def __init__(self):
@@ -427,12 +427,21 @@ initialize_fundus_classifier(
 print("="*70 + "\n")
 
 # ============================================================================
-# DATABASE PERSISTENCE
+# DATABASE PERSISTENCE & STORAGE
 # ============================================================================
 
+# Define storage directories
+STORAGE_DIR = PROJECT_ROOT / "storage"
+DATA_DIR = STORAGE_DIR / "data"
+IMAGES_DIR = STORAGE_DIR / "images"
+
+# Create directories if they don't exist
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
 # Define persistence file paths
-SCAN_DB_PATH = Path("scans_database.json")
-REVIEW_DB_PATH = Path("reviews_database.json")
+SCAN_DB_PATH = DATA_DIR / "scans_database.json"
+REVIEW_DB_PATH = DATA_DIR / "reviews_database.json"
 
 # In-memory storage with persistence
 scan_database: Dict[str, Dict] = {}
@@ -463,16 +472,13 @@ def load_databases():
 def save_databases():
     """
     Save scan and review databases to JSON files.
-    
-    Strips large base64 image strings to keep JSON files small.
-    Images are kept in memory for API responses but not persisted to disk.
     """
     try:
-        # Serialize scans without large image data
+        # Serialize scans without large image data in the JSON
         serializable_scans = {}
         for scan_id, scan_data in scan_database.items():
             clean_scan = scan_data.copy()
-            # Strip large base64 strings - they're not needed for persistence
+            # Images are saved to disk separately, so we don't need them in JSON
             clean_scan.pop("original_image", None)
             clean_scan.pop("heatmap_image", None)
             serializable_scans[scan_id] = clean_scan
@@ -502,8 +508,16 @@ def image_to_base64(image: Image.Image) -> str:
 
 def base64_to_image(base64_str: str) -> Image.Image:
     """Convert base64 string to PIL Image."""
+    if base64_str.startswith('data:'):
+        base64_str = base64_str.split(',')[1]
     image_data = base64.b64decode(base64_str)
     return Image.open(io.BytesIO(image_data))
+
+def save_image_to_disk(image: Image.Image, filename: str) -> str:
+    """Save PIL Image to the storage/images directory and return the path."""
+    filepath = IMAGES_DIR / filename
+    image.save(filepath, format="PNG")
+    return str(filepath)
 
 # ============================================================================
 # API ENDPOINTS
@@ -574,6 +588,14 @@ async def analyze_image(
         # Generate Grad-CAM heatmap
         heatmap_base64 = gradcam_generator.generate_heatmap(image, prediction)
         
+        # Save images to disk
+        orig_filename = f"{scan_id}_original.png"
+        heat_filename = f"{scan_id}_heatmap.png"
+        save_image_to_disk(image, orig_filename)
+        
+        heatmap_img = base64_to_image(heatmap_base64)
+        save_image_to_disk(heatmap_img, heat_filename)
+
         # Store scan data
         scan_data = {
             "scan_id": scan_id,
@@ -583,6 +605,8 @@ async def analyze_image(
             "age": age,
             "original_image": image_to_base64(image),
             "heatmap_image": heatmap_base64,
+            "original_image_file": orig_filename,
+            "heatmap_image_file": heat_filename,
             "prediction": prediction,
             "review_status": "pending"
         }
@@ -674,6 +698,16 @@ async def analyze_image_compat(
             print(f"  Generating Grad-CAM...")
             heatmap_base64 = gradcam_generator.generate_heatmap(image, prediction)
         
+        # Save images to disk
+        orig_filename = f"{analysis_id}_original.png"
+        save_image_to_disk(image, orig_filename)
+        
+        heat_filename = None
+        if heatmap_base64:
+            heat_filename = f"{analysis_id}_heatmap.png"
+            heatmap_img = base64_to_image(heatmap_base64)
+            save_image_to_disk(heatmap_img, heat_filename)
+
         # Store scan data with patient info
         scan_data = {
             "scan_id": analysis_id,
@@ -682,6 +716,8 @@ async def analyze_image_compat(
             "timestamp": timestamp,
             "original_image": image_to_base64(image),
             "heatmap_image": heatmap_base64,
+            "original_image_file": orig_filename,
+            "heatmap_image_file": heat_filename,
             "prediction": prediction,
             "review_status": "pending"
         }

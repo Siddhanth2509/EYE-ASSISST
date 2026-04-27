@@ -1,0 +1,18 @@
+{
+  "data_root": ".",
+  "train_csv": "phase3_multi_disease/data/train_unified_v5.csv",
+  "val_csv": "phase3_multi_disease/data/val_unified_v5.csv",
+  "model": "resnet50",
+  "num_diseases": 6,
+  "no_pretrained": false,
+  "epochs": 50,
+  "batch_size": 32,
+  "lr": 0.0001,
+  "weight_decay": 1e-05,
+  "image_size": 224,
+  "num_workers": 2,
+  "save_dir": "phase3_multi_disease/checkpoints",
+  "patience": 10,
+  "device": "cuda",
+  "seed": 42
+}

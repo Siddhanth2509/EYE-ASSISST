@@ -41,7 +41,7 @@ class FundusClassifier:
         checkpoint_path = Path(checkpoint_path)
         
         if not checkpoint_path.exists():
-            print(f"⚠️  Fundus classifier not found at {checkpoint_path}")
+            print(f"[WARNING] Fundus classifier not found at {checkpoint_path}")
             print("   System will use fallback validation (DR model confidence)")
             self.model_loaded = False
             return
@@ -72,7 +72,7 @@ class FundusClassifier:
             
             self.model_loaded = True
             
-            print(f"✅ Fundus classifier loaded successfully")
+            print(f"[OK] Fundus classifier loaded successfully")
             print(f"   Model: mobilenetv2_100")
             print(f"   Threshold: {self.threshold*100:.1f}%")
             if val_acc > 0:
@@ -82,7 +82,7 @@ class FundusClassifier:
         except Exception as e:
             # FAIL HARD - don't silently fall back for medical system
             raise RuntimeError(
-                f"❌ CRITICAL: Fundus classifier failed to load\n"
+                f"CRITICAL: Fundus classifier failed to load\n"
                 f"   Error: {e}\n"
                 f"   Type: {type(e).__name__}\n"
                 f"   Path: {checkpoint_path}\n"

@@ -8,9 +8,9 @@ import {
   User,
   Sparkles,
   ChevronRight,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Knowledge Base
 interface KnowledgeEntry {
@@ -90,6 +90,21 @@ const KNOWLEDGE_BASE: KnowledgeEntry[] = [
     response: "I can help you with:\n\n📋 **Understanding Diseases** - DR, AMD, Glaucoma, Cataract, and more\n📊 **Interpreting Results** - Severity grades, confidence scores\n🔍 **Screening Process** - How to upload, what to expect\n📅 **Appointments** - Booking with specialists\n💡 **Prevention Tips** - Lifestyle recommendations\n📖 **General Eye Health** - Common questions answered\n\nWhat would you like to know about?",
     quickReplies: ['What is DR?', 'Screening process', 'Book appointment'],
   },
+  {
+    keywords: ['referral', 'refer', 'when to refer', 'urgent'],
+    response: "👨‍⚕️ **Clinical Referral Guidelines:**\n\n**Immediate/Urgent (Same day or < 24h):**\n• Sudden vision loss\n• Suspected acute angle-closure glaucoma\n• Retinal detachment (flashes/floaters + field loss)\n• Suspected wet AMD with new hemorrhage\n\n**Semi-Urgent (1-2 weeks):**\n• Severe NPDR or PDR (Grade 3-4)\n• Unexplained drop in visual acuity\n• Macular edema involving fovea\n\n**Routine (< 3 months):**\n• Moderate NPDR (Grade 2)\n• Glaucoma suspect (cupping without vision loss)\n• Progression of dry AMD\n• Visually significant cataract",
+    quickReplies: ['Grade 3 protocol', 'Heatmap reading', 'Accuracy'],
+  },
+  {
+    keywords: ['protocol', 'guideline', 'management plan'],
+    response: "👨‍⚕️ **Standard Management Protocols by Severity:**\n\n**Grade 0 (Normal):** Annual rescreening.\n**Grade 1 (Mild NPDR):** Screen every 6-12 months. Strict glycemic control.\n**Grade 2 (Moderate NPDR):** Screen every 3-6 months. Consider OCT to rule out DME.\n**Grade 3 (Severe NPDR):** Urgent referral. High risk of progression. Panretinal photocoagulation (PRP) may be indicated.\n**Grade 4 (Proliferative):** Immediate referral. PRP and/or Anti-VEGF therapy required. Risk of tractional retinal detachment.",
+    quickReplies: ['Referral guidelines', 'Interpret heatmap', 'False positives'],
+  },
+  {
+    keywords: ['false positive', 'artifacts', 'image quality', 'suboptimal'],
+    response: "👨‍⚕️ **Handling Suboptimal Images & Artifacts:**\n\n**Common Causes of False Positives:**\n• Dust on camera lens mimicking microaneurysms\n• Uneven illumination causing pseudo-exudates\n• Severe cataracts obscuring retinal details\n• Prominent choroidal vessels in lightly pigmented fundi\n\n**Recommendation:** If the AI confidence is <70% or the heatmap highlights obvious artifacts (like the image border or dust spots), please override the AI and request a rescan or refer for clinical examination.",
+    quickReplies: ['Interpret heatmap', 'Confidence score', 'Referral guidelines'],
+  }
 ];
 
 // Default response when no match found
@@ -196,6 +211,29 @@ export default function EyeBot() {
     handleSend(reply);
   };
 
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: generateId(),
+        type: 'bot',
+        content: KNOWLEDGE_BASE[0].response,
+        quickReplies: KNOWLEDGE_BASE[0].quickReplies,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const renderMarkdownLine = (line: string) => {
+    // Basic Markdown parser for **bold** text inline
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   return (
     <>
       {/* Floating Button */}
@@ -245,18 +283,29 @@ export default function EyeBot() {
                   </p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                  onClick={handleClearChat}
+                  title="Clear Chat"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
-            {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
+            {/* Messages — scrollable */}
+            <div className="flex-1 overflow-y-auto p-4" style={{ scrollBehavior: 'smooth' }}>
               <div className="space-y-4">
                 {messages.map((message) => (
                   <motion.div
@@ -292,25 +341,20 @@ export default function EyeBot() {
                       >
                         {/* Parse markdown-like formatting */}
                         {message.content.split('\n').map((line, i) => (
-                          <span key={i}>
-                            {line.startsWith('**') && line.endsWith('**') ? (
-                              <strong className="font-semibold">
-                                {line.replace(/\*\*/g, '')}
-                              </strong>
-                            ) : line.startsWith('•') ? (
+                          <span key={i} className="block min-h-[1.2em]">
+                            {line.startsWith('•') || line.startsWith('-') ? (
                               <span className="flex items-start gap-2">
                                 <span className="mt-1.5 w-1 h-1 bg-current rounded-full flex-shrink-0" />
-                                <span>{line.substring(2)}</span>
+                                <span>{renderMarkdownLine(line.substring(2))}</span>
                               </span>
                             ) : line.startsWith('📋') || line.startsWith('📊') || line.startsWith('🔍') || line.startsWith('📅') || line.startsWith('💡') || line.startsWith('📖') ? (
                               <span className="flex items-start gap-2 mt-1">
                                 <span>{line.substring(0, 2)}</span>
-                                <span>{line.substring(2)}</span>
+                                <span>{renderMarkdownLine(line.substring(2))}</span>
                               </span>
                             ) : (
-                              line
+                              renderMarkdownLine(line)
                             )}
-                            {i < message.content.split('\n').length - 1 && <br />}
                           </span>
                         ))}
                       </div>
@@ -366,7 +410,7 @@ export default function EyeBot() {
 
                 <div ref={messagesEndRef} />
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Input */}
             <div className="p-4 border-t border-border">

@@ -23,8 +23,9 @@ import json
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 from torchvision import transforms, models
 from PIL import Image
 import numpy as np
@@ -98,6 +99,28 @@ class MultiDiseaseDataset(Dataset):
 # ============================================================================
 # MODEL ARCHITECTURE
 # ============================================================================
+
+
+class FocalLoss(nn.Module):
+    """Focal Loss for addressing extreme class imbalance."""
+    def __init__(self, alpha=1, gamma=2, pos_weight=None):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.pos_weight = pos_weight
+
+    def forward(self, inputs, targets):
+        BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        pt = torch.exp(-BCE_loss)
+        F_loss = self.alpha * (1 - pt)**self.gamma * BCE_loss
+        
+        if self.pos_weight is not None:
+            # Apply pos_weight to positive samples only
+            # self.pos_weight is (C,), targets is (N, C). They will broadcast correctly.
+            weights = (targets * self.pos_weight) + (1 - targets)
+            F_loss = F_loss * weights
+            
+        return F_loss.mean()
 
 class MultiDiseaseModel(nn.Module):
     """
@@ -354,11 +377,33 @@ def main():
         transform=get_transforms(args.image_size, mode='val')
     )
     
-    # Create dataloaders
+    # Create dataloaders with WeightedRandomSampler to boost rare classes
+    label_cols = ['dr', 'glaucoma', 'amd', 'cataract', 'hypertensive', 'myopic']
+    import pandas as pd
+    df_train_meta = pd.read_csv(args.train_csv)
+    pos_counts_vals = df_train_meta[label_cols].sum().values
+    
+    # Calculate weights for each sample
+    weights_per_class = 1.0 / (pos_counts_vals + 1e-6)
+    sample_weights = []
+    all_labels = train_dataset.labels
+    for labels in all_labels:
+        # A sample's weight is the sum of inverse frequencies of its positive classes
+        weight = np.sum(labels * weights_per_class)
+        if weight == 0: # For 'Normal' samples, give a baseline weight
+             weight = 1.0 / len(all_labels)
+        sample_weights.append(weight)
+    
+    sampler = WeightedRandomSampler(
+        weights=sample_weights,
+        num_samples=len(sample_weights),
+        replacement=True
+    )
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
-        shuffle=True,
+        sampler=sampler,
         num_workers=args.num_workers,
         pin_memory=True
     )
@@ -391,13 +436,15 @@ def main():
     total = len(df_train_meta)
     pos_counts = df_train_meta[label_cols].sum().values.astype(np.float32)
     neg_counts = total - pos_counts
-    # Clip to avoid division by zero; cap weight at 20 to prevent instability
-    pos_weight_vals = np.clip(neg_counts / np.maximum(pos_counts, 1), 1.0, 20.0)
+    # Increased cap to 50x to force learning of rare diseases
+    pos_weight_vals = np.clip(neg_counts / np.maximum(pos_counts, 1), 1.0, 50.0)
     pos_weight = torch.tensor(pos_weight_vals, dtype=torch.float32).to(args.device)
     print("\n=== Class Pos Weights (imbalance correction) ===")
     for name, w in zip(label_cols, pos_weight_vals):
         print(f"  {name:13s}: {w:.2f}x")
-    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    
+    # Switching to Focal Loss for better handling of hard examples
+    criterion = FocalLoss(pos_weight=pos_weight)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=5)
     

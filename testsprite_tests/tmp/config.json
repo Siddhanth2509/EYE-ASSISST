@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "executionArgs": {
+    "projectName": "EYE-ASSISST",
+    "projectPath": "d:\\MAJOR_PROJECT\\EYE-ASSISST-main\\EYE-ASSISST-main",
+    "testIds": [],
+    "additionalInstruction": "Please use the following seeded accounts for all login and authentication flows:\n- Admin: admin@eyeassist.demo / Demo@1234\n- Doctor: doctor@eyeassist.demo / Demo@1234\n- Technician: tech@eyeassist.demo / Demo@1234\n- Patient: patient@eyeassist.demo / Demo@1234",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-KDMPTQ37mWE4HggMmuuocXUFql_uGrGw74-Td6-z4_aO5W8TlwAlHwjz0rQDJzfOzrWSJ79YyjbzTeoRJOQCBubzM9p5hfzTPVUp01JfHnf4fuNiJ6-cgM46-_rMUmv4Nx0"
+    }
+  },
+  "serverPort": 65167,
+  "proxy": "http://90d193d8-48c1-473a-bdc1-b05f8c116c1d:Im5OajESFWENBuuFm3Z4LwbGrRooQiPL@tun.testsprite.com:8080"
+}

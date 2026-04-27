@@ -30,9 +30,9 @@ export default function PaymentGateway({ amount, description, onSuccess, onClose
   const [cvv, setCvv] = useState('');
   const [cardName, setCardName] = useState('');
 
-  const UPI_ID = 'eyeassist@upi';
+  const UPI_ID = 'kuldeepgoswami636@okhdfcbank';
   const qrData = `upi://pay?pa=${UPI_ID}&pn=EYE-ASSISST&am=${amount}&tn=${encodeURIComponent(description)}&cu=INR`;
-  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrData)}&size=200x200&color=22d3ee&bgcolor=0a0f1e&format=png&margin=10`;
+  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrData)}&size=200x200&format=png&margin=10`;
 
   const copyUpiId = () => {
     navigator.clipboard.writeText(UPI_ID);
@@ -40,12 +40,10 @@ export default function PaymentGateway({ amount, description, onSuccess, onClose
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const simulatePay = async () => {
-    setProcessing(true);
-    await new Promise(r => setTimeout(r, 2500));
+  const simulatePay = () => {
     setProcessing(false);
-    setSuccess(true);
-    setTimeout(() => onSuccess(txnId), 2000);
+    setSuccess(false);
+    onSuccess(txnId);
   };
 
   const formatCard = (val: string) =>
@@ -254,6 +252,18 @@ export default function PaymentGateway({ amount, description, onSuccess, onClose
                 </motion.div>
               )}
             </AnimatePresence>
+            
+            {/* TEST BYPASS BUTTON */}
+            <div className="mt-4 pt-4 border-t border-border flex justify-center">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs w-full bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border-amber-500/30"
+                onClick={simulatePay}
+              >
+                Bypass Payment (Test Automation)
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

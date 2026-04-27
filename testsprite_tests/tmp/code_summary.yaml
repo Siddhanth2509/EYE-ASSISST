@@ -1,0 +1,74 @@
+version: "2"
+type: frontend
+tech_stack:
+  - React 19
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+  - Lucide React
+  - Framer Motion
+routes:
+  - path: /
+    file: AI Eye Screening UI/app/src/App.tsx
+    auth_required: false
+    description: Landing page
+  - path: /login
+    file: AI Eye Screening UI/app/src/App.tsx
+    auth_required: false
+    description: User role selection and login/signup page
+  - path: /dashboard
+    file: AI Eye Screening UI/app/src/App.tsx
+    auth_required: true
+    description: Main dashboard handling patient, doctor, tech, and admin views
+features:
+  - name: Authentication
+    description: Login and signup for Patient, Doctor, Technician, and Admin roles.
+    files:
+      - AI Eye Screening UI/app/src/App.tsx
+    entry_route: /login
+    user_interactions:
+      - Select role
+      - Fill email and password
+      - Submit to login
+    api_calls: []
+    auth_required: false
+  - name: Patient Portal
+    description: View scan history, book appointments, and edit profile.
+    files:
+      - AI Eye Screening UI/app/src/pages/PatientPortal.tsx
+    entry_route: /dashboard
+    user_interactions:
+      - View scan list
+      - Click on scan to view details
+      - Book an appointment
+      - Update profile information
+    api_calls: []
+    auth_required: true
+  - name: Doctor Portal
+    description: View pending scans, run Grad-CAM heatmap, write clinical review, and approve scans.
+    files:
+      - AI Eye Screening UI/app/src/pages/DoctorDashboard.tsx
+    entry_route: /dashboard
+    user_interactions:
+      - Select scan from pending list
+      - Generate heatmap
+      - Submit severity and notes
+    api_calls:
+      - method: POST
+        endpoint: /api/v1/analyze
+      - method: POST
+        endpoint: /api/v1/patient/update-scan
+    auth_required: true
+  - name: Admin Portal
+    description: View analytics and manage user accounts.
+    files:
+      - AI Eye Screening UI/app/src/pages/AdminDashboard.tsx
+      - AI Eye Screening UI/app/src/components/UserManagementPanel.tsx
+    entry_route: /dashboard
+    user_interactions:
+      - View charts
+      - Add new user
+      - View user list
+    api_calls: []
+    auth_required: true
+known_limitations: []

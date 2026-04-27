@@ -36,7 +36,7 @@ export default function UserManagementPanel() {
   const [filterRole, setFilterRole] = useState('all');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'doctor', phone: '' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'doctor', phone: '', password: '' });
 
   const save = (updated: any[]) => {
     setUsers(updated);
@@ -56,17 +56,19 @@ export default function UserManagementPanel() {
 
   const resetPwd = (u: any) => toast.success(`Password reset link sent to ${u.email}`);
 
-  const addUser = () => {
+  const addUser = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newUser.name || !newUser.email) { toast.error('Name and email are required'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) { toast.error('Invalid email address'); return; }
     const entry = {
       ...newUser,
+      password: newUser.password || 'TempPass123!',
+      email: newUser.email.trim(),
       id: `USR-${String(Date.now()).slice(-4)}`,
       active: true,
       createdAt: new Date().toISOString().split('T')[0],
     };
     save([...users, entry]);
-    setNewUser({ name: '', email: '', role: 'doctor', phone: '' });
+    setNewUser({ name: '', email: '', role: 'doctor', phone: '', password: '' });
     setShowAdd(false);
     toast.success('User created');
   };
@@ -103,8 +105,9 @@ export default function UserManagementPanel() {
               <Card className="medical-panel border-primary/30">
                 <CardHeader><CardTitle className="text-sm">New User</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
+                  <form onSubmit={addUser}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
                       <Label className="text-xs">Full Name</Label>
                       <Input className="mt-1" value={newUser.name}
                         onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))}
@@ -134,11 +137,18 @@ export default function UserManagementPanel() {
                         ))}
                       </select>
                     </div>
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button size="sm" onClick={addUser}>Create User</Button>
-                    <Button size="sm" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-                  </div>
+                    <div>
+                      <Label className="text-xs">Temporary Password</Label>
+                      <Input className="mt-1" type="password" value={newUser.password}
+                        onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))}
+                        placeholder="••••••••" />
+                    </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button size="sm" type="submit">Create User</Button>
+                      <Button size="sm" type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
+                    </div>
+                  </form>
                 </CardContent>
               </Card>
             </motion.div>

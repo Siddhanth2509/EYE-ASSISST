@@ -1,9 +1,9 @@
 {
-  "SCAN-EDB076A2": {
-    "scan_id": "SCAN-EDB076A2",
-    "patient_id": "p-980",
+  "SCAN-84A7E827": {
+    "scan_id": "SCAN-84A7E827",
+    "patient_id": "P-2026-003",
     "laterality": "OD",
-    "timestamp": "2026-04-21T17:41:47.202266",
+    "timestamp": "2026-04-26T13:36:59.823461",
     "prediction": {
       "binary_result": "Normal",
       "confidence": 99.63,
@@ -31,7 +31,4 @@
           "confidence": 0.0
         }
       },
-      "features": []
-    }
-  }
-}
+      "features": 

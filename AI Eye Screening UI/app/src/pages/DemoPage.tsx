@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 // Reusing the offline demo logic from App.tsx
 function generateMockResult(patientId: string, laterality: string) {
@@ -72,6 +73,32 @@ function generateMockResult(patientId: string, laterality: string) {
   };
 }
 
+// Check if image is likely a retinal fundus image (red-dominant)
+async function isFundusImage(src: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 50;
+      canvas.height = 50;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(true); return; } // can't check, allow through
+      ctx.drawImage(img, 0, 0, 50, 50);
+      const { data } = ctx.getImageData(0, 0, 50, 50);
+      let r = 0, g = 0, b = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        r += data[i]; g += data[i + 1]; b += data[i + 2];
+      }
+      const total = r + g + b;
+      // Fundus images are predominantly red (ratio > 0.38)
+      resolve(total === 0 || r / total >= 0.38);
+    };
+    img.onerror = () => resolve(true); // can't decode, allow through
+    img.src = src;
+  });
+}
+
 export default function DemoPage() {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
@@ -79,17 +106,35 @@ export default function DemoPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any | null>(null);
   const [progress, setProgress] = useState(0);
+  const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const url = URL.createObjectURL(file);
-    setUploadedImage(url);
-    setResult(null);
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setUploadedImage(dataUrl);
+      setResult(null);
+      setImageError(null);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const startDemoAnalysis = () => {
+  const startDemoAnalysis = async () => {
     if (!uploadedImage) return;
+
+    // Validate fundus image
+    const valid = await isFundusImage(uploadedImage);
+    if (!valid) {
+      setImageError('This does not appear to be a retinal fundus image. Please upload a valid fundus photograph.');
+      toast.error('❌ Invalid image. Please upload a retinal fundus image.');
+      return;
+    }
+    setImageError(null);
     setIsAnalyzing(true);
     setProgress(0);
     
@@ -179,16 +224,32 @@ export default function DemoPage() {
                     )}
                   </div>
 
+                  {/* Error banner for invalid image */}
+                  {imageError && !isAnalyzing && !result && (
+                    <div className="mt-3 w-full flex items-start gap-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-red-400">{imageError}</p>
+                    </div>
+                  )}
+
+                  {/* Clear button always visible when image is loaded */}
+                  <button
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/80 hover:bg-background border border-border flex items-center justify-center transition-colors"
+                    onClick={() => { setUploadedImage(null); setResult(null); setIsAnalyzing(false); setImageError(null); }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
                   {!isAnalyzing && !result && (
-                    <Button size="lg" className="absolute bottom-6 btn-medical shadow-xl" onClick={startDemoAnalysis}>
+                    <Button size="lg" className="mt-4 btn-medical shadow-xl" onClick={startDemoAnalysis}>
                       <Activity className="w-5 h-5 mr-2" /> Run AI Analysis
                     </Button>
                   )}
 
                   {(result || isAnalyzing) && (
-                    <Button variant="secondary" size="icon" className="absolute top-4 right-4 rounded-full bg-background/80 hover:bg-background"
-                      onClick={() => { setUploadedImage(null); setResult(null); setIsAnalyzing(false); }}>
-                      <X className="w-4 h-4" />
+                    <Button variant="secondary" size="sm" className="mt-4"
+                      onClick={() => { setUploadedImage(null); setResult(null); setIsAnalyzing(false); setImageError(null); }}>
+                      Upload Another Image
                     </Button>
                   )}
                 </div>
