@@ -2130,8 +2130,21 @@ function AdminAnalyticsPanel() {
 // ============================================================================
 
 function DashboardShell() {
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [activeTab, setActiveTab] = useState('upload');
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('eye_session') || 'null');
+      if (session && session.role && session.role !== 'patient') return session.role as UserRole;
+    } catch { /* ignore */ }
+    return null;
+  });
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('eye_session') || 'null');
+      if (session?.role === 'doctor') return 'review';
+      if (session?.role === 'admin') return 'analytics';
+    } catch { /* ignore */ }
+    return 'upload';
+  });
 
   const handleLogin = (role: UserRole) => {
     setUserRole(role);
@@ -2141,6 +2154,7 @@ function DashboardShell() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('eye_session');
     setUserRole(null);
     setActiveTab('upload');
     toast.info('Logged out successfully');
