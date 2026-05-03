@@ -344,3 +344,28 @@ AI\ Eye\ Screening\ UI/package-lock.json
 
 # Windows launcher (local only)
 START_APP.bat
+
+# =========================
+# IDE / TOOL GENERATED
+# =========================
+
+# JetBrains IDEs (PyCharm, IntelliJ, etc.)
+.idea/
+
+# =========================
+# DATASET (local only - too large for git, gitignored at root)
+# =========================
+
+# The full Dataset/ folder is in .gitignore already, but these slipped
+# through before the rule was in place - now explicitly blocked
+Dataset/
+
+# =========================
+# TEST RUNNER RAW OUTPUT
+# =========================
+
+# TestSprite generates these at runtime — not source, not committed
+testsprite_tests/tmp/
+
+# Automation notebook (TestSprite internal, not project code)
+notebooks/testing/
