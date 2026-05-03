@@ -1,10 +1,10 @@
 {
   "thresholds": {
-    "dr": 0.85,
-    "glaucoma": 0.85,
-    "amd": 0.85,
-    "cataract": 0.90,
-    "hypertensive": 0.85,
-    "myopic": 0.85
+    "dr": 0.6,
+    "glaucoma": 0.6,
+    "amd": 0.6,
+    "cataract": 0.6,
+    "hypertensive": 0.6,
+    "myopic": 0.6
   }
 }

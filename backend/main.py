@@ -144,10 +144,10 @@ def is_fundus_image(image: Image.Image) -> tuple[bool, str]:
         is_fundus, prob, message = classifier.predict(image)
         
         if is_fundus:
-            print(f"    ✅ Fundus classifier: PASS ({prob*100:.1f}% fundus)")
+            print(f"    [OK] Fundus classifier: PASS ({prob*100:.1f}% fundus)")
             return True, "Valid fundus image"
         else:
-            print(f"    ❌ Fundus classifier: REJECT ({prob*100:.1f}% fundus, threshold: {classifier.threshold*100:.0f}%)")
+            print(f"    [ERROR] Fundus classifier: REJECT ({prob*100:.1f}% fundus, threshold: {classifier.threshold*100:.0f}%)")
             return False, message
             
     except Exception as e:
@@ -220,7 +220,7 @@ class RealDRModel:
         
         if not model_path.exists():
             raise FileNotFoundError(
-                f"❌ CRITICAL: Model not found at {model_path}\n"
+                f"[ERROR] CRITICAL: Model not found at {model_path}\n"
                 f"   Cannot start backend without trained model.\n"
                 f"   Please ensure the model checkpoint exists."
             )
@@ -253,7 +253,7 @@ class RealDRModel:
             print(f"   Model loaded successfully on {self.device}")
             
         except Exception as e:
-            raise RuntimeError(f"❌ CRITICAL: Failed to load model: {e}\n   Backend cannot start without model.")
+            raise RuntimeError(f"[ERROR] CRITICAL: Failed to load model: {e}\n   Backend cannot start without model.")
     
     def preprocess_image(self, image: Image.Image) -> torch.Tensor:
         """Preprocess image for model inference."""
@@ -267,7 +267,7 @@ class RealDRModel:
         # CRITICAL: Model MUST be loaded
         if not self.model_loaded or self.model is None:
             raise RuntimeError(
-                "❌ CRITICAL: Model not loaded. Cannot make predictions.\n"
+                "[ERROR] CRITICAL: Model not loaded. Cannot make predictions.\n"
                 "   This should never happen if backend started correctly."
             )
         
@@ -365,7 +365,7 @@ class MultiDiseaseDetector:
         cfg_path  = model_path.parent / 'threshold_config.json'
 
         if not model_path.exists():
-            logger.warning(f"Phase 3 model not found at {model_path} — multi-disease disabled")
+            logger.warning(f"Phase 3 model not found at {model_path} - multi-disease disabled")
             return
         try:
             self.model = _MultiDiseaseNet().to(self.device)
@@ -376,12 +376,12 @@ class MultiDiseaseDetector:
             print(f"Phase 3 multi-disease model loaded (epoch {ckpt.get('epoch', '?')}, "
                   f"best F1={ckpt.get('best_f1', 0):.4f})")
             if cfg_path.exists():
-                with open(cfg_path) as f:
+                with open(cfg_path, encoding='utf-8') as f:
                     cfg = json.load(f)
                 self.thresholds.update(cfg.get('thresholds', {}))
                 print(f"  Calibrated thresholds: {self.thresholds}")
         except Exception as e:
-            logger.warning(f"Phase 3 model load failed: {e} — multi-disease disabled")
+            logger.warning(f"Phase 3 model load failed: {e} - multi-disease disabled")
 
     def predict(self, image: Image.Image) -> Dict[str, Any]:
         """Run multi-disease inference; returns per-class detection flags."""
@@ -453,18 +453,18 @@ def load_databases():
     
     if SCAN_DB_PATH.exists():
         try:
-            with open(SCAN_DB_PATH, 'r') as f:
+            with open(SCAN_DB_PATH, 'r', encoding='utf-8') as f:
                 scan_database = json.load(f)
-                print(f"✅ Loaded {len(scan_database)} scans from database")
+                print(f"Loaded {len(scan_database)} scans from database")
         except Exception as e:
             logger.error(f"Failed to load scan database: {e}")
             scan_database = {}
     
     if REVIEW_DB_PATH.exists():
         try:
-            with open(REVIEW_DB_PATH, 'r') as f:
+            with open(REVIEW_DB_PATH, 'r', encoding='utf-8') as f:
                 review_database = json.load(f)
-                print(f"✅ Loaded {len(review_database)} reviews from database")
+                print(f"Loaded {len(review_database)} reviews from database")
         except Exception as e:
             logger.error(f"Failed to load review database: {e}")
             review_database = {}
@@ -483,13 +483,13 @@ def save_databases():
             clean_scan.pop("heatmap_image", None)
             serializable_scans[scan_id] = clean_scan
         
-        with open(SCAN_DB_PATH, 'w') as f:
+        with open(SCAN_DB_PATH, 'w', encoding='utf-8') as f:
             json.dump(serializable_scans, f, indent=2)
         
-        with open(REVIEW_DB_PATH, 'w') as f:
+        with open(REVIEW_DB_PATH, 'w', encoding='utf-8') as f:
             json.dump(review_database, f, indent=2)
         
-        logger.info(f"✅ Databases saved successfully ({len(serializable_scans)} scans, {len(review_database)} reviews)")
+        logger.info(f"[OK] Databases saved successfully ({len(serializable_scans)} scans, {len(review_database)} reviews)")
     except Exception as e:
         logger.error(f"Failed to save databases: {e}")
 
@@ -667,6 +667,8 @@ async def analyze_image_compat(
         # Read and process image
         contents = await file.read()
         image = Image.open(io.BytesIO(contents))
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
         
         print(f"  Image size: {image.size}")
         print(f"  Image mode: {image.mode}")
@@ -675,12 +677,20 @@ async def analyze_image_compat(
         print(f"  Running fundus validation...")
         is_valid, validation_msg = is_fundus_image(image)
         if not is_valid:
-            print(f"  ❌ REJECTED: {validation_msg}")
+            print(f"  [ERROR] REJECTED: {validation_msg}")
             raise HTTPException(
                 status_code=400, 
                 detail=validation_msg
             )
-        print(f"  ✅ Validation passed")
+        print(f"  [OK] Validation passed")
+
+        # Resize large images to max 1024px to keep Grad-CAM fast and storage small
+        MAX_DIM = 1024
+        w, h = image.size
+        if max(w, h) > MAX_DIM:
+            scale = MAX_DIM / max(w, h)
+            image = image.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
+            print(f"  Resized to {image.size} for processing")
         
         # Generate analysis ID
         analysis_id = f"SCAN-{uuid.uuid4().hex[:8].upper()}"
@@ -702,7 +712,7 @@ async def analyze_image_compat(
             print(f"  Generating Grad-CAM...")
             heatmap_base64 = gradcam_generator.generate_heatmap(image, prediction)
         
-        # Save images to disk
+        # Save images to disk (already resized)
         orig_filename = f"{analysis_id}_original.png"
         save_image_to_disk(image, orig_filename)
         
@@ -715,29 +725,33 @@ async def analyze_image_compat(
         if "features" in prediction:
             del prediction["features"]
 
+        # Convert image to base64 for in-memory storage (already resized, fast)
+        orig_b64 = image_to_base64(image)
+
+        # Ensure Grad-CAM has proper data:image prefix
+        formatted_heatmap = heatmap_base64
+        if heatmap_base64 and not heatmap_base64.startswith('data:'):
+            formatted_heatmap = f"data:image/png;base64,{heatmap_base64}"
+
         # Store scan data with patient info
         scan_data = {
             "scan_id": analysis_id,
             "patient_id": patient_id or "unknown",
             "laterality": laterality,
             "timestamp": timestamp,
-            "original_image": image_to_base64(image),
-            "heatmap_image": heatmap_base64,
+            "original_image": orig_b64,
+            "heatmap_image": formatted_heatmap,
             "original_image_file": orig_filename,
             "heatmap_image_file": heat_filename,
             "prediction": prediction,
             "review_status": "pending"
         }
         scan_database[analysis_id] = scan_data
-        print(f"  ✅ Scan {analysis_id} stored (laterality: {laterality})")
+        print(f"  [OK] Scan {analysis_id} stored (laterality: {laterality})")
         
-        # Ensure Grad-CAM has proper data:image prefix
-        formatted_heatmap = heatmap_base64
-        if heatmap_base64 and not heatmap_base64.startswith('data:'):
-            formatted_heatmap = f"data:image/png;base64,{heatmap_base64}"
-        
-        # Save databases
-        save_databases()
+        # Save databases in background thread so it doesn't block the HTTP response
+        import threading
+        threading.Thread(target=save_databases, daemon=True).start()
         
         # Return response in frontend-expected format
         return {
@@ -1017,3 +1031,4 @@ async def submit_review(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
