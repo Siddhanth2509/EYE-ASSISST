@@ -279,6 +279,10 @@ Dataset/
 *.zip
 node_modules/
 
+# Exception: phase1_pipelines/data/ contains SOURCE CODE not raw data
+!phase1_pipelines/
+!phase1_pipelines/**
+
 # Ensure model weights ARE uploaded
 !backend/models/*.pt
 !backend/models/*.pth
