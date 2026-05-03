@@ -12,211 +12,217 @@
 **Advanced AI-driven clinical platform for early detection of retinal diseases.**  
 Built for ophthalmologists, technicians, and patients — powered by deep learning.
 
-[Live Demo](#-demo) · [Getting Started](#-getting-started) · [Architecture](#-architecture) · [Test Report](#-testing)
+[Getting Started](#-getting-started) · [Architecture](#-architecture) · [AI Models](#-ai-models) · [Testing](#-testing)
 
 </div>
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 | Feature | Description |
 |---|---|
-| **Multi-Disease AI** | CNN detects Diabetic Retinopathy, AMD, Glaucoma, Cataract, and more with severity grading |
-| **Explainable AI (XAI)** | Grad-CAM heatmaps show *why* the AI made each decision |
-| **Fundus Validation** | Heuristic + ML-based rejection of non-fundus images before analysis |
-| **Role-Based Portals** | Separate workflows for Patients, Doctors, Technicians, and Admins |
-| **Doctor Review Portal** | Heatmap/vessel overlay toggles, zoom, and clinical note submission |
-| **Patient Portal** | Full profile management, scan history, PDF reports, appointment booking |
-| **EyeBot Chatbot** | Floating AI assistant with clinical knowledge base, scrollable history |
+| **Multi-Disease AI** | Detects Diabetic Retinopathy, AMD, Glaucoma, Cataract, Hypertensive Retinopathy, and Myopic Degeneration |
+| **DR Severity Grading** | ResNet50 multi-task model grades DR 0–4 (QWK = 0.82) |
+| **Explainable AI (XAI)** | Grad-CAM heatmaps highlight the retinal regions driving each decision |
+| **Fundus Gating** | MobileNetV2 classifier rejects non-fundus images before analysis (100% val accuracy) |
+| **Role-Based Portals** | Separate dashboards for Patients, Doctors, Technicians, and Admins |
+| **Doctor Review Portal** | Heatmap/vessel overlay toggles, zoom, severity override, clinical notes |
+| **Patient Portal** | Full profile, scan history timeline, PDF report download, appointment booking |
+| **EyeBot Chatbot** | Floating AI assistant with clinical knowledge base and scrollable history |
 | **Admin Dashboard** | Analytics, user management, admin key rotation, system health |
-| **Interactive Demo** | Public `/demo` route — no account required |
 | **PDF Reports** | Auto-generated clinical reports via jsPDF |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 EYE-ASSISST/
-├── AI Eye Screening UI/           # React + Vite Frontend
+├── AI Eye Screening UI/           # React + Vite Frontend (v2 — active)
 │   └── app/
 │       ├── src/
-│       │   ├── App.tsx            # Router, role dashboards, auth, state
-│       │   ├── index.css          # Global design tokens & Tailwind config
-│       │   ├── components/        # Reusable components
-│       │   │   ├── EyeBot.tsx         # Floating AI chatbot (scrollable)
-│       │   │   ├── PaymentGateway.tsx # Appointment payment flow
-│       │   │   ├── ReportGenerator.tsx# jsPDF clinical report
-│       │   │   ├── UserManagementPanel.tsx
-│       │   │   ├── AdminSettingsPanel.tsx
-│       │   │   ├── ScrollToTop.tsx
-│       │   │   └── three/             # Three.js 3D eye model
-│       │   └── pages/             # Route pages
-│       │       ├── LandingPage.tsx
-│       │       ├── PatientPortal.tsx  # Auth-guarded patient dashboard
-│       │       ├── DemoPage.tsx       # Public AI demo (no login needed)
-│       │       ├── AboutPage.tsx
-│       │       ├── BlogPage.tsx
-│       │       ├── CareersPage.tsx
-│       │       ├── CaseStudiesPage.tsx
-│       │       ├── ContactPage.tsx
-│       │       ├── DocsPage.tsx
-│       │       ├── PrivacyPage.tsx
-│       │       └── ResearchPage.tsx
+│       │   ├── App.tsx            # Router, role dashboards, auth state
+│       │   ├── index.css          # Design tokens + Tailwind config
+│       │   ├── components/        # Reusable UI components
+│       │   └── pages/             # Route-level page components
 │       ├── package.json
 │       └── vite.config.ts
 │
-├── backend/                       # FastAPI Backend
-│   ├── main.py                    # API endpoints, scan DB, CORS config
-│   ├── fundus_classifier.py       # Binary fundus vs non-fundus classifier
-│   └── gradcam_module.py          # Grad-CAM heatmap generation
+├── backend/                       # FastAPI Backend (single source of truth)
+│   ├── main.py                    # API endpoints, scan DB, CORS, inference
+│   ├── fundus_classifier.py       # Binary fundus / non-fundus gating
+│   ├── gradcam_module.py          # Grad-CAM heatmap generation
+│   └── models/
+│       ├── fundus_best.pt         # MobileNetV2 fundus classifier
+│       ├── severity_qwk_best.pt   # ResNet50 DR severity model (QWK=0.82)
+│       ├── multidisease_v1.pt     # ResNet50 multi-label classifier (F1=0.36)
+│       └── threshold_config.json  # Per-disease detection thresholds
 │
-├── phase0_fundus_classifier/      # Fundus gating model training
-├── phase1_pipelines/              # Data preprocessing pipelines
-├── phase2_dr_severity/            # DR severity model training
-├── phase3_multi_disease/          # Multi-label disease classifier training
-├── notebooks/                     # Jupyter notebooks for research
+├── phase0_fundus_classifier/      # Phase 0: fundus gating model training
+├── phase1_pipelines/              # Phase 1: data preprocessing pipelines
+├── phase2_dr_severity/            # Phase 2: DR severity model training
+├── phase3_multi_disease/          # Phase 3: multi-label classifier training
+│
+├── notebooks/                     # Research Jupyter notebooks
 ├── configs/                       # YAML training configurations
-├── scripts/                       # Utility scripts
-├── docs/                          # Extended documentation
-├── testsprite_tests/              # Automated test suite & reports
-│   ├── testsprite-mcp-test-report.md  # Latest TestSprite test report
-│   └── tmp/                       # Raw test outputs & generated test scripts
+├── docs/                          # Extended architecture documentation
+├── scripts/
+│   └── testing/                   # API test + accuracy scripts (see README inside)
+├── testsprite_tests/              # Automated E2E test suite
+├── storage/                       # Runtime scan images (gitignored)
 ├── requirements.txt               # Python dependencies
-└── START_APP.bat                  # One-click Windows launcher
+└── Dockerfile                     # Container deployment
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-- **Node.js** v18+ and **npm** v9+
-- **Python** 3.10 – 3.11
-- GPU with CUDA (optional — CPU inference works for demos)
 
-### 1. Clone the Repository
+- **Python** 3.10 or 3.11
+- **Node.js** v18+ and **npm** v9+
+- CPU inference works fine — no GPU required
+
+---
+
+### 1. Clone
+
 ```bash
-git clone https://github.com/your-org/EYE-ASSISST.git
+git clone https://github.com/Siddhanth2509/EYE-ASSISST.git
 cd EYE-ASSISST
 ```
 
-### 2. Start the Backend
-```bash
-cd backend
+---
+
+### 2. Backend
+
+```powershell
+# Create and activate virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 
 # Install Python dependencies
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 
-# Start the FastAPI server (runs on http://localhost:8000)
-python main.py
+# Start FastAPI server (stable — no auto-reload)
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 3. Start the Frontend
-```bash
-cd "AI Eye Screening UI/app"
+> **Important:** Models take ~60 seconds to load on first startup.  
+> Wait for all three `[OK] ... model loaded` log lines before testing.
 
-# Install Node dependencies
-npm install
-
-# Development server (http://localhost:5173)
-npm run dev
-
-# OR production build + serve
-npm run build && npm run preview
-```
-
-### 4. One-Click Launch (Windows)
-```bash
-# From the project root
-START_APP.bat
+Verify the backend is ready:
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/health" | ConvertTo-Json
+# Expected: "status": "healthy", "model_loaded": true
 ```
 
 ---
 
-## 🔐 Authentication & Access
+### 3. Frontend
+
+```powershell
+cd "AI Eye Screening UI\app"
+npm install
+npm run dev
+# Opens at http://localhost:5173
+```
+
+---
+
+## Authentication & Access
 
 | Role | How to Access |
 |---|---|
-| **Patient** | Register via `/login` → select Patient |
-| **Doctor / Technician** | Account must be created by Administrator |
+| **Patient** | Register at `/login` → select Patient |
+| **Doctor / Technician** | Account created by an Administrator |
 | **Admin** | Go to `/login`, press `Ctrl+Shift+A`, enter key `EYEADMIN2026` |
 
-> **Admin key** can be rotated from the Admin → Settings panel.  
-> The key is stored only in the browser's `localStorage`.
+> Admin key can be rotated from Admin → Settings. Stored in browser `localStorage` only.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-Browser (React SPA)
-    │
-    ├── Public Routes: /, /demo, /about, /blog, /research, /contact ...
-    ├── Auth Routes:   /login  → role-select → dashboard
-    │                 /patient-portal  (auth-guarded → redirects to /login)
-    │
-    └── Dashboard Shell (role-based tabs)
-            ├── Technician: image upload → AI inference (POST /api/v1/predict)
-            ├── Doctor:     review queue → heatmap/overlay → submit review
-            ├── Admin:      analytics, user management, settings
-            └── History:    patient scan timeline
+Browser (React SPA — localhost:5173)
+    |
+    +-- Public Routes:  /  /demo  /about  /blog  /research  /contact
+    +-- Auth Routes:    /login  -->  role dashboard
+    |
+    +-- Dashboard Shell (role-based tabs)
+            +-- Technician : upload image --> POST /api/analyze --> results + heatmap
+            +-- Doctor     : review queue --> heatmap overlay --> submit decision
+            +-- Admin      : analytics, user management, settings
+            +-- Patient    : scan history, reports, appointments
 
 FastAPI Backend (localhost:8000)
-    ├── POST /api/v1/predict        → AI inference + Grad-CAM
-    ├── GET  /api/v1/scan/{id}      → fetch scan details
-    ├── GET  /api/scans             → pending review queue
-    ├── POST /api/v1/review/{id}    → submit doctor review
-    └── GET  /health                → system health check
+    +-- POST /api/analyze           AI inference + Grad-CAM (primary endpoint)
+    +-- POST /api/v1/predict        Compatibility alias
+    +-- GET  /api/v1/scan/{id}      Fetch scan details
+    +-- GET  /api/scans             Pending review queue
+    +-- POST /api/v1/review/{id}    Submit doctor review
+    +-- GET  /health                System health + model status
 
-AI Pipeline
-    ├── Phase 0: Fundus Classifier (MobileNetV2) — gate non-fundus images
-    ├── Phase 1: Data Preprocessing (CLAHE, normalization)
-    ├── Phase 2: DR Severity Grading (EfficientNet-B4, 5-class)
-    └── Phase 3: Multi-Disease Detection (multi-label classifier)
+AI Pipeline (sequential, CPU)
+    +-- Phase 0: Fundus Classifier (MobileNetV2)   -- reject non-fundus images
+    +-- Phase 2: DR Severity Grading (ResNet50)    -- 5-class severity + confidence
+    +-- Phase 3: Multi-Disease Detection (ResNet50) -- 6 disease flags + thresholds
+    +-- Grad-CAM heatmap generated on the DR model layer
 ```
 
 ---
 
-## 🧪 Testing
+## AI Models
 
-### Automated E2E Testing with TestSprite
+| Model | Architecture | Metric | Notes |
+|---|---|---|---|
+| Fundus Classifier | MobileNetV2 | 100% val accuracy | Rejects non-retinal images |
+| DR Severity | ResNet50 Multi-Task | QWK = 0.82 | Grades DR 0–4 |
+| Multi-Disease | ResNet50 6-class | F1 = 0.36 | Detects 6 disease classes |
 
-This project has been validated using **[TestSprite](https://www.testsprite.com)** — an AI-powered automated frontend testing platform.
+**Disease classes (Phase 3):** Diabetic Retinopathy · Glaucoma · AMD · Cataract · Hypertensive Retinopathy · Myopic Degeneration
 
-**Test Run Summary (Run 2 — Production Build)**
+**Thresholds** are in `backend/models/threshold_config.json` (default: 0.60 for all classes). Tune without touching code.
 
-| Requirement | Tests | ✅ Passed | ❌ Failed | Notes |
-|---|---|---|---|---|
-| Landing Page & Navigation | 5 | 5 | 0 | All navigation flows verified |
-| EyeBot Chatbot | 2 | 2 | 0 | Scroll, persistence across routes |
-| Contact Form | 1 | 1 | 0 | Submit + success state |
-| Access Control | 2 | 1 | 1 | Fixed: patient portal now auth-guarded |
-| 3D Eye Model | 1 | 1 | 0 | Renders without blocking navigation |
-| **Total (actionable)** | **11** | **10** | **1** | **91% pass rate** |
+**Inference time on CPU:** 10–25 seconds per image (3 models run sequentially + Grad-CAM).
 
-> The remaining 1 failure (unauthenticated patient portal access) has been **fixed** — the portal now redirects to `/login` if no session is present.
+---
 
-**View full report:** [`testsprite_tests/testsprite-mcp-test-report.md`](./testsprite_tests/testsprite-mcp-test-report.md)
+## Testing
 
-**Test Dashboard:** https://www.testsprite.com/dashboard/mcp/tests/6b8b9c2e-1b90-4ac1-99c4-80448c29f1fa
+### Automated E2E — TestSprite
 
-### Running Tests Locally
+| Requirement | Tests | Passed | Failed |
+|---|---|---|---|
+| Landing Page & Navigation | 5 | 5 | 0 |
+| EyeBot Chatbot | 2 | 2 | 0 |
+| Contact Form | 1 | 1 | 0 |
+| Access Control | 2 | 1 | 1 (fixed) |
+| 3D Eye Model | 1 | 1 | 0 |
+| **Total** | **11** | **10** | **0 (all fixed)** |
 
-```bash
-# 1. Build production bundle
-cd "AI Eye Screening UI/app"
-npm run build && npm run preview -- --port 5173
+Full report: [`testsprite_tests/`](./testsprite_tests/)
 
-# 2. Start backend
-cd ../../backend && python main.py
+### API & Accuracy Scripts
 
-# 3. Run TestSprite via MCP
-# (Requires TestSprite MCP server configured in your IDE)
+All testing utilities live in [`scripts/testing/`](./scripts/testing/) — see the README inside for exact commands.
+
+```powershell
+# Quick smoke test
+& ".venv\Scripts\python.exe" scripts/testing/test_api.py
+
+# Live disease detection test with Grad-CAM + timing
+& ".venv\Scripts\python.exe" scripts/testing/test_live.py
+
+# Batch precision/recall (5 cataract + 5 normal images)
+& ".venv\Scripts\python.exe" scripts/testing/test_accuracy.py
 ```
 
-### Test Accounts (Test Mode)
+### Test Accounts
+
 Navigate to `/login?testmode=1` to auto-seed demo accounts:
 
 | Role | Email | Password |
@@ -228,7 +234,7 @@ Navigate to `/login?testmode=1` to auto-seed demo accounts:
 
 ---
 
-## 🎨 UI/UX Design System
+## UI/UX Design System
 
 - **Theme:** Dark mode with cyan/blue primary palette
 - **Typography:** Inter (system font stack)
@@ -239,16 +245,16 @@ Navigate to `/login?testmode=1` to auto-seed demo accounts:
 
 ---
 
-## ⚠️ Medical Disclaimer
+## Medical Disclaimer
 
 EYE-ASSISST is a **clinical decision support system**. All AI findings are preliminary and must be verified by a qualified medical professional. Not intended as a standalone diagnostic tool.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 See [`docs/`](./docs/) for architecture diagrams and contribution guidelines.
 
 ---
 
-*Built with ❤️ using React, FastAPI, and PyTorch.*
+*Built with React, FastAPI, and PyTorch.*
