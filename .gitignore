@@ -316,3 +316,31 @@ fix_backend.py
 test_api.py
 test_live.py
 test_accuracy.py
+
+# =========================
+# STRUCTURAL NOISE (never commit)
+# =========================
+
+# Nested git repos accidentally tracked as submodules
+backend/eye-assisst-api/
+
+# Orphan root-level model outputs (real weights are in backend/models/)
+models/
+
+# Orphan training outputs at root
+training_history.json
+
+# Config-only checkpoint dirs (no best_model.pt = incomplete run, useless)
+# Only dirs containing best_model.pt should be committed
+phase3_multi_disease/checkpoints/*/
+!phase3_multi_disease/checkpoints/multidisease_resnet50_20260409_203335/
+!phase3_multi_disease/checkpoints/multidisease_resnet50_20260409_213016/
+!phase3_multi_disease/checkpoints/multidisease_resnet50_20260409_233715/
+!phase3_multi_disease/checkpoints/multidisease_resnet50_20260422_000250/
+!phase3_multi_disease/checkpoints/multidisease_resnet50_20260423_225434/
+
+# Empty / wrong-level package-lock files
+AI\ Eye\ Screening\ UI/package-lock.json
+
+# Windows launcher (local only)
+START_APP.bat
