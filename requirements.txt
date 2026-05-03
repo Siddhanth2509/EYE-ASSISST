@@ -1,44 +1,49 @@
 # ======================================================
-# EYE-ASSISST — Backend Requirements
+# EYE-ASSISST - Backend Requirements
 # ======================================================
-# Python 3.10 – 3.11 recommended
+# Python 3.10 - 3.11 recommended
 # Install with:  pip install -r requirements.txt
+#
+# NOTE: PyTorch CPU-only build (no CUDA required).
+# If you have a CUDA GPU, replace the torch lines with
+# the GPU build from https://pytorch.org/get-started/locally/
 
-# ── Web Framework ──────────────────────────────────────
+# -- Web Framework --------------------------------------
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 python-multipart>=0.0.9
 
-# ── Deep Learning ──────────────────────────────────────
-# CPU-only build — swap for GPU build if CUDA is available
-torch==2.2.2
-torchvision==0.17.2
-torchaudio==2.2.2
+# -- Deep Learning (CPU build) -------------------------
+# CPU-only: installs ~750MB instead of 2GB CUDA build
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+torchaudio==2.2.2+cpu
 
-# ── Model Architecture ─────────────────────────────────
+# -- Model Architecture --------------------------------
 timm>=0.9.16
 
-# ── Scientific / ML ────────────────────────────────────
+# -- Scientific / ML -----------------------------------
 numpy>=1.26.4
 pandas>=2.2.0
 scikit-learn>=1.4.0
 
-# ── Image Processing ───────────────────────────────────
+# -- Image Processing ----------------------------------
 Pillow>=10.3.0
 opencv-python-headless>=4.9.0
 
-# ── Explainability (Grad-CAM) ─────────────────────────
+# -- Explainability (Grad-CAM) -------------------------
 grad-cam>=1.5.0
 
-# ── Visualisation ──────────────────────────────────────
+# -- Visualisation -------------------------------------
 matplotlib>=3.8.0
 seaborn>=0.13.0
 
-# ── Utilities ──────────────────────────────────────────
+# -- Utilities -----------------------------------------
 tqdm>=4.66.0
 pyyaml>=6.0.1
 rich>=13.7.0
 
-# ── Dev / Notebooks (optional — remove for production) ─
+# -- Dev / Notebooks (optional) -----------------------
 # jupyter>=1.0.0
 # ipykernel>=6.29.0
