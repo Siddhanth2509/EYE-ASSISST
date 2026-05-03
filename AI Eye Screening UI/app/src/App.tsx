@@ -784,7 +784,7 @@ function TechnicianDashboard() {
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/analyze?include_gradcam=true`,
-          { method: 'POST', body: formData, signal: AbortSignal.timeout(8000) }
+          { method: 'POST', body: formData, signal: AbortSignal.timeout(60000) }
         );
 
         if (!response.ok) {
