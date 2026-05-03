@@ -752,6 +752,7 @@ async def analyze_image_compat(
         # Save databases in background thread so it doesn't block the HTTP response
         import threading
         threading.Thread(target=save_databases, daemon=True).start()
+
         
         # Return response in frontend-expected format
         return {
